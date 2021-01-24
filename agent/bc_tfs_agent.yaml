@@ -99,7 +99,7 @@ objects:
 parameters:
 - name: "GIT_URL"
   description: "The URL of the repository with slave dockerfile."
-  value: "https://github.com/osa-ora/sample_dotnet"
+  value: "https://github.com/osa-ora/simple_dotnet"
   required: true
 - name: "GIT_BRANCH"
   description: "The branch within the repository which contains the applicable source code"
@@ -107,11 +107,11 @@ parameters:
   required: true
 - name: "GIT_CONTEXT_DIR"
   description: "The sub directory location of the docker file"
-  value: "docker"
+  value: "agent"
 - name: "DOCKERFILE_PATH"
   description: "The path to the dockerfile to use when building the image e.g. dockerfile_dotnet or dockerfile_gradle."
   required: true
-  value: "tfs_agent_2"
+  value: "tfs_agent"
 - name: "IMAGE_NAME"
   description: "The name of the image this build will produce"
   value: "tfs-agent"
