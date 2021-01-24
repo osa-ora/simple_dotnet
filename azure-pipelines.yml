@@ -1,0 +1,93 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+parameters:
+- name: firstRun
+  default: false
+  type: boolean
+  displayName: 'First Run of this Pipeline'
+- name: ocp_token
+  default: '0oNEsqmqW1iiJjJ7oseXLxiXtHpQvquFhTZz0Lc-Vrk'
+  type: string
+  displayName: 'Openshift Auth Token'
+- name: ocp_server
+  default: 'https://api.cluster-894c.894c.sandbox1092.opentlc.com:6443'
+  type: string
+  displayName: 'Openshift Server URL'
+- name: proj_name
+  default: 'dev'
+  type: string
+  displayName: 'Openshift Project Name'
+- name: app_name
+  default: 'sample'
+  type: string
+  displayName: 'Openshift Application Name'
+- name: app_folder
+  default: 'sample_app'
+  type: string
+  displayName: 'Application Folder'
+- name: test_folder
+  default: 'sample_tests'
+  type: string
+  displayName: 'Test Folder'
+- name: sonar_proj
+  default: 'dotnet'
+  type: string
+  displayName: 'SonarQube Project'
+- name: sonar_token
+  default: '95e2dea7380d052775e18549229f728238ff5eea'
+  type: string
+  displayName: 'SonarQube Token'
+- name: sonar_url
+  default: 'http://sonarqube-cicd.apps.cluster-894c.894c.sandbox1092.opentlc.com'
+  type: string
+  displayName: 'SonarQube Server URL'
+
+trigger:
+- main
+
+pool:
+  name: 'ocp_pool_java8'
+
+steps:
+- script: echo 'start pipeline'
+  displayName: 'Run a Pipeline'
+
+- script: dotnet clean build test Tests --logger trx
+  displayName: 'Run Test Cases'
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testRunner: VSTest
+    testResultsFiles: '{{parameters.test_folder}}/**/*.trx'
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/{{parameters.app_folder}}/bin'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+- script: |
+    dotnet sonarscanner begin /k:${{parameters.sonar_proj}} /d:sonar.host.url=${{parameters.sonar_url}}  /d:sonar.login=${{parameters.sonar_token}} 
+    dotnet build
+    dotnet sonarscanner end /d:sonar.login=${{parameters.sonar_token}}    
+    rm -R {{parameters.app_folder}}/bin
+    oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
+    oc project ${{parameters.proj_name}}
+    oc new-build --image-stream=dotnet:latest --binary=true --name=${{parameters.app_name}}
+    oc start-build ${{parameters.app_name}} --from-dir={{parameters.app_folder}}/.
+    oc logs -f bc/${{parameters.app_name}}
+    oc new-app ${{parameters.app_name}} --as-deployment-config
+    oc expose svc ${{parameters.app_name}} --port=8080 --name=${{parameters.app_name}}
+  displayName: 'Build, Scan and Deploy the application on first runs..'
+  condition: eq('${{ parameters.firstRun }}', true)
+- script: |
+    dotnet sonarscanner begin /k:${{parameters.sonar_proj}} /d:sonar.host.url=${{parameters.sonar_url}}  /d:sonar.login=${{parameters.sonar_token}} 
+    dotnet build
+    dotnet sonarscanner end /d:sonar.login=${{parameters.sonar_token}}      
+    rm -R {{parameters.app_folder}}/bin
+    oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
+    oc project ${{parameters.proj_name}}
+    oc start-build ${{parameters.app_name}} --from-dir={{parameters.app_folder}}/.
+    oc logs -f bc/${{parameters.app_name}}
+  displayName: 'Build, Scan and Deploy the application on subsequent runs..'
+  condition: eq('${{ parameters.firstRun }}', false)
