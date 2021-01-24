@@ -70,7 +70,7 @@ steps:
     publishLocation: 'Container'
 - script: |
     dotnet sonarscanner begin /k:${{parameters.sonar_proj}} /d:sonar.host.url=${{parameters.sonar_url}}  /d:sonar.login=${{parameters.sonar_token}} 
-    dotnet build ${{parameters.app_folder}}
+    dotnet build
     dotnet sonarscanner end /d:sonar.login=${{parameters.sonar_token}}    
     rm -R {{parameters.app_folder}}/bin
     oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
