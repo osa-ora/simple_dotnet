@@ -81,7 +81,8 @@ pipeline {
 	}
     agent {
     // Using the dotnet builder agent
-       label "jenkins-dotnet-slave"
+       label "jenkins-slave-dotnet"
+       //"jenkins-dotnet-slave"
     }
   stages {
     stage('Setup Parameters') {
@@ -210,6 +211,12 @@ pipeline {
             sh "oc logs -f bc/${app_name}"
         }
     }
+    stage('Smoke Test') {
+        steps {
+            sleep(time:15,unit:"SECONDS")
+            sh "curl \$(oc get route ${app_name} -o jsonpath='{.spec.host}') | grep 'Web apps'"
+        }
+    }
   }
 } // pipeline
 ```
@@ -223,7 +230,7 @@ agent {
 
 The pipeline uses many parameters in 1st execution, it will fail then in subsequent executions it will prepare the parameters:
 
-<img width="1294" alt="Screen Shot 2021-01-20 at 22 15 00" src="https://user-images.githubusercontent.com/18471537/105334042-17cbd100-5bdf-11eb-9066-a08691cc66c7.png">
+<img width="1417" alt="Screen Shot 2021-01-24 at 16 40 30" src="https://user-images.githubusercontent.com/18471537/105633726-fa0e9e00-5e62-11eb-803d-ce4605aee9a2.png">
 
 
 ## 5) Deployment Across Environments
