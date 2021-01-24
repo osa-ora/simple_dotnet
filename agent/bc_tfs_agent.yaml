@@ -1,0 +1,141 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: "tfs-agent-template"
+  annotations:
+    description: "The agent image for tfs."
+    iconClass: "fas fa-book-dead"
+    tags: "tfs,agent,dotnet,java,node,gradle"
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${AGENT_NAME}-azure-secret
+    labels:
+      app: ${AGENT_NAME}
+  stringData:
+    azure-url: ${AZURE_URL}
+    azure-token: ${AZURE_TOKEN}
+    azure-pool: ${AZURE_POOL}
+- kind: "BuildConfig"
+  apiVersion: "v1"
+  metadata:
+    name: ${IMAGE_NAME}
+  spec:
+    env:
+      - name: "GIT_SSL_NO_VERIFY"
+        value: ${GIT_SSL_NO_VERIFY}
+    source:
+      type: "Git"
+      git:
+        ref: ${GIT_BRANCH}
+        uri: ${GIT_URL}
+      contextDir: ${GIT_CONTEXT_DIR}
+    strategy:
+      type: "Docker"
+      dockerStrategy:
+        dockerfilePath: ${DOCKERFILE_PATH}
+        env:
+          - name: GIT_SSL_NO_VERIFY
+            value: ${GIT_SSL_NO_VERIFY}
+    output:
+      to:
+        kind: "ImageStreamTag"
+        name: "${IMAGE_NAME}:${IMAGE_STREAM_TAG}"
+- kind: "ImageStream"
+  apiVersion: "v1"
+  metadata:
+    name: ${IMAGE_NAME}
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      template.alpha.openshift.io/wait-for-ready: "true"
+    labels:
+      app: tfs_agent
+    name: ${AGENT_NAME}
+  spec:
+    replicas: 1
+    selector:
+      name: ${AGENT_NAME}
+    template:
+      metadata:
+        labels:
+          name: ${AGENT_NAME}
+      spec:
+        containers:
+        - env:
+          - name: AZP_URL
+            valueFrom:
+              secretKeyRef:
+                key: azure-url
+                name: ${AGENT_NAME}-azure-secret
+          - name: AZP_TOKEN
+            valueFrom:
+              secretKeyRef:
+                key: azure-token
+                name: ${AGENT_NAME}-azure-secret
+          - name: AZP_POOL
+            valueFrom:
+              secretKeyRef:
+                key: azure-pool
+                name: ${AGENT_NAME}-azure-secret
+          image: ${IMAGE_NAME}
+          imagePullPolicy: IfNotPresent
+          name: ${AGENT_NAME}
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${AGENT_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${IMAGE_NAME}:latest
+      type: ImageChange
+    - type: ConfigChange
+parameters:
+- name: "GIT_URL"
+  description: "The URL of the repository with slave dockerfile."
+  value: "https://github.com/osa-ora/sample_dotnet"
+  required: true
+- name: "GIT_BRANCH"
+  description: "The branch within the repository which contains the applicable source code"
+  value: "main"
+  required: true
+- name: "GIT_CONTEXT_DIR"
+  description: "The sub directory location of the docker file"
+  value: "docker"
+- name: "DOCKERFILE_PATH"
+  description: "The path to the dockerfile to use when building the image e.g. dockerfile_dotnet or dockerfile_gradle."
+  required: true
+  value: "tfs_agent_2"
+- name: "IMAGE_NAME"
+  description: "The name of the image this build will produce"
+  value: "tfs-agent"
+  required: true
+- name: "IMAGE_STREAM_TAG"
+  description: "The tag to associate with the image"
+  value: "latest"
+  required: true
+- name: "GIT_SSL_NO_VERIFY"
+  value: "true"
+  required: true
+- name: "AGENT_NAME"
+  description: "The name of this agent"
+  value: "my-agent"
+  required: true
+- name: "AZURE_URL"
+  description: "The URL of Azure DevOps"
+  value: "https://dev.azure.com/osamaoransa"
+  required: true  
+- name: "AZURE_TOKEN"
+  description: "The token to access Azure DevOps"
+  value: "my-token"
+  required: true    
+- name: "AZURE_POOL"
+  description: "The pool name of this agent in Azure DevOps"
+  value: "ocp_pool"
+  required: true
