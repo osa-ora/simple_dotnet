@@ -39,7 +39,14 @@ oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n dev
 
 
 ## 2) Configure Jenkins 
-In case you completed 1st step before provision Openshift Jenkins, it will auto-detect the slave dotnet image based on the label and annotation and no thing need to be done to configure it, otherwise you can do it manually for existing Jenkins installation
+In case you completed 1st step, it will auto-detect the slave dotnet image based on the label and annotation and no thing need to be done to configure it.
+```
+    labels:
+      role: jenkins-slave
+    annotations:
+      role: jenkins-slave 
+```
+Otherwise you can do it manually as following:  
 
 From inside Jenkins --> go to Manage Jenkins ==> Configure Jenkins then scroll to cloud section:
 https://{JENKINS_URL}/configureClouds
