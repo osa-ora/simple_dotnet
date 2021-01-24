@@ -1,0 +1,70 @@
+FROM ubuntu:18.04
+
+# To make it easier for build and release pipelines to run apt-get,
+# configure apt to not require confirmation (assume the -y argument by default)
+ENV DEBIAN_FRONTEND=noninteractive
+RUN echo "APT::Get::Assume-Yes \"true\";" > /etc/apt/apt.conf.d/90assumeyes
+
+RUN apt-get update \
+&& apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        jq \
+        git \
+        iputils-ping \
+        libcurl4 \
+        libicu60 \
+        libunwind8 \
+        netcat \
+        libssl1.0
+
+RUN apt update \
+  && apt-get install -y curl \
+  && apt-get install -y wget \
+  && apt-get install -y unzip \
+  && rm -rf /var/lib/apt/lists/*
+  
+#ENV DOTNET_CLI_HOME=/tmp/.dotnet
+
+RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
+    && dpkg -i packages-microsoft-prod.deb
+
+RUN apt-get update; \
+  apt-get install -y apt-transport-https && \
+  apt-get update && \
+  apt-get install -y dotnet-sdk-3.1
+
+RUN dotnet tool install dotnet-sonarscanner --global
+ENV PATH="${PATH}:~/.dotnet/tools"
+
+RUN apt install default-jre \
+    && apt install openjdk-11-jre-headless
+
+RUN apt install nodejs \
+   && apt install npm
+
+ENV GRADLE_VERSION=6.7.1
+
+RUN curl -skL -o /tmp/gradle-bin.zip https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip && \
+    mkdir -p /opt/gradle && \
+    unzip -q /tmp/gradle-bin.zip -d /opt/gradle && \
+    ln -sf /opt/gradle/gradle-$GRADLE_VERSION/bin/gradle /usr/local/bin/gradle
+
+ENV GRADLE_USER_HOME="/tmp"
+RUN mkdir -p /tmp/.sonar
+ENV SONAR_USER_HOME="/tmp/.sonar"
+
+ENV OC_VERSION=4.5.4
+RUN curl http://d3s3zqyaz8cp2d.cloudfront.net/pub/openshift-v4/clients/ocp/4.5.4/openshift-client-linux-${OC_VERSION}.tar.gz --output oc.tar.gz && \
+    tar -xzvf oc.tar.gz && \
+    cp oc /usr/local/bin && \
+    cp kubectl /usr/local/bin && \
+    rm kubectl && \
+    rm oc
+
+WORKDIR /azp
+
+COPY ./start.sh .
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]
