@@ -57,7 +57,7 @@ steps:
 - script: |
     dotnet build
     dotnet test ${{parameters.test_folder}} --logger trx
-    ls ${{parameters.app_folder}}/bin
+    ls $(System.DefaultWorkingDirectory)/${{parameters.app_folder}}/bin
   displayName: 'Run Test Cases'
 - task: PublishTestResults@2
   condition: succeededOrFailed()
@@ -66,7 +66,7 @@ steps:
     testResultsFiles: '${{parameters.test_folder}}/**/*.trx'
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(System.DefaultWorkingDirectory)/${{parameters.app_folder}}/bin/**/*.*'
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/${{parameters.app_folder}}/bin'
     ArtifactName: 'drop'
     publishLocation: 'Container'
 - script: |
