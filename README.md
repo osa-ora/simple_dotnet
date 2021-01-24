@@ -411,12 +411,16 @@ parameters:
   default: false
   type: boolean
   displayName: 'First Run of this Pipeline'
+- name: sonarQubeRun
+  default: false
+  type: boolean
+  displayName: 'Run Sonar Qube Analysis'
 - name: ocp_token
-  default: 'token_here'
+  default: 'm4hvdDocXkpsg8jCoj70suZG6MKo4_mzskIFIo2q1ZM'
   type: string
   displayName: 'Openshift Auth Token'
 - name: ocp_server
-  default: 'https://api.cluster-894c.894c.....:6443'
+  default: 'https://api.cluster-894c.894c.sandbox1092.opentlc.com:6443'
   type: string
   displayName: 'Openshift Server URL'
 - name: proj_name
@@ -440,11 +444,11 @@ parameters:
   type: string
   displayName: 'SonarQube Project'
 - name: sonar_token
-  default: 'token_here'
+  default: 'bf696b44d40d24b0f2396c8a3c231984e0207030'
   type: string
   displayName: 'SonarQube Token'
 - name: sonar_url
-  default: 'http://sonarqube-cicd...'
+  default: 'http://sonarqube-cicd.apps.cluster-894c.894c.sandbox1092.opentlc.com'
   type: string
   displayName: 'SonarQube Server URL'
 
@@ -461,10 +465,14 @@ steps:
 - script: |
     dotnet build
     dotnet test ${{parameters.test_folder}} --logger trx
+  displayName: 'Build Application, Run Test Cases and Sonar Analysis'
+
+- script: |
     dotnet sonarscanner begin /k:${{parameters.sonar_proj}} /d:sonar.host.url=${{parameters.sonar_url}}  /d:sonar.login=${{parameters.sonar_token}} 
     dotnet build
     dotnet sonarscanner end /d:sonar.login=${{parameters.sonar_token}}
-  displayName: 'Build Application, Run Test Cases and Sonar Analysis'
+  displayName: 'Run Sonar Qube Analysis'
+  condition: eq('${{ parameters.sonarQubeRun }}', true)
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
@@ -498,7 +506,7 @@ steps:
 7- Run Azure DevOps Pipeline
 You'll see in the agent logs that it pick the job and execute it, and you will see in Azure DevOpe the pipleine exeuction:
 
-<img width="666" alt="Screen Shot 2021-01-09 at 14 50 11" src="https://user-images.githubusercontent.com/18471537/104092075-39959180-528a-11eb-96a9-6dad39037f91.png">
+<img width="757" alt="Screen Shot 2021-01-24 at 11 55 35" src="https://user-images.githubusercontent.com/18471537/105626818-244c6580-5e3b-11eb-860c-43c329351f14.png">
 
 You can also see the published test results:
 
