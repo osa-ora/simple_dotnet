@@ -68,7 +68,7 @@ steps:
     dotnet build
     dotnet sonarscanner end /d:sonar.login=${{parameters.sonar_token}}
   displayName: 'Run Sonar Qube Analysis'
-  condition: eq('${{ parameters.sonarQubeRun }}', false)
+  condition: eq('${{ parameters.sonarQubeRun }}', true)
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
