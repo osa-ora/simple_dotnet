@@ -55,7 +55,7 @@ steps:
   displayName: 'Run a Pipeline'
 
 - script: |
-    dotnet clean build ${{parameters.app_folder}}
+    dotnet build
     dotnet test ${{parameters.test_folder}} --logger trx
   displayName: 'Run Test Cases'
 - task: PublishTestResults@2
