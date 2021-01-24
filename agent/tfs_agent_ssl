@@ -1,0 +1,26 @@
+FROM image-registry.openshift-image-registry.svc:5000/openshift/tfs-agent-j8_11:latest
+
+WORKDIR /azp
+
+#In case disconnected environment use this with start_dis.sh 
+#COPY ./vsts-agent-linux-x64-2.153.1.tar.gz .
+
+#Add self signed certificates
+COPY ./rootca.crt /usr/local/share/ca-certificates/
+COPY ./subca.crt /usr/local/share/ca-certificates/
+# all other certificates in .crt format
+RUN update-ca-certificates
+
+#Add certificates to default Java keystore
+RUN keytool -import -noprompt -alias ROOT-CA_NAME -keystore /azp/jdk1.8.0_271/jre/lib/security/cacerts -file /usr/local/share/ca-certificates/rootca.crt -storepass changeit
+RUN  keytool -import -noprompt  -alias SUB-CA_NAME -keystore /azp/jdk1.8.0_271/jre/lib/security/cacerts  -file /usr/local/share/ca-certificates/subca.crt -storepass changeit
+# all other certificates in .crt format
+
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_DIR=/dev/null
+ENV DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
+
+#COPY ./start_dis.sh start.sh
+COPY ./start.sh .
+RUN chmod +x start.sh
+CMD ["./start.sh"]
