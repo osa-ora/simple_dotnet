@@ -389,9 +389,9 @@ oc adm policy add-scc-to-user anyuid -z default
 ```
 4- Build the Agent Image on OCP using the template: bc_tfs_agent.yaml where you need to supply the following info:
 ```
-oc create -f https://raw.githubusercontent.com/osa-ora/sample_dotnet/main/docker/bc_tfs_agent.yaml
+oc create -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/agent/bc_tfs_agent.yaml
 
-oc process -p GIT_URL=https://github.com/osa-ora/sample_dotnet -p GIT_BRANCH=main -p GIT_CONTEXT_DIR=docker -p DOCKERFILE_PATH=tfs_agent -p IMAGE_NAME=tfs-agent -p AGENT_NAME=myagent -p AZURE_URL=azure_url_here -p AZURE_TOKEN=token_here -p AZURE_POOL=ocp_pool  tfs-agent-template  | oc create -f -
+oc process -p GIT_URL=https://github.com/osa-ora/simple_dotnet -p GIT_BRANCH=main -p GIT_CONTEXT_DIR=agent -p DOCKERFILE_PATH=tfs_agent -p IMAGE_NAME=tfs-agent -p AGENT_NAME=myagent -p AZURE_URL=azure_url_here -p AZURE_TOKEN=token_here -p AZURE_POOL=ocp_pool  tfs-agent-template  | oc create -f -
 
 ```
 Note: once the image is built, you can use the other template file: docker/bc_tfs_agent_local.yaml and populate the image stream configuration and other agent details.  
