@@ -54,7 +54,9 @@ steps:
 - script: echo 'start pipeline'
   displayName: 'Run a Pipeline'
 
-- script: dotnet clean build test Tests --logger trx
+- script: |
+    dotnet clean build 
+    dotnet clean build test --logger trx
   displayName: 'Run Test Cases'
 - task: PublishTestResults@2
   condition: succeededOrFailed()
