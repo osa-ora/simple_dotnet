@@ -7,6 +7,10 @@ parameters:
   default: false
   type: boolean
   displayName: 'First Run of this Pipeline'
+- name: sonarQubeRun
+  default: false
+  type: boolean
+  displayName: 'Run Sonar Qube Analysis'
 - name: ocp_token
   default: 'm4hvdDocXkpsg8jCoj70suZG6MKo4_mzskIFIo2q1ZM'
   type: string
@@ -57,10 +61,14 @@ steps:
 - script: |
     dotnet build
     dotnet test ${{parameters.test_folder}} --logger trx
+  displayName: 'Build Application, Run Test Cases and Sonar Analysis'
+
+- script: |
     dotnet sonarscanner begin /k:${{parameters.sonar_proj}} /d:sonar.host.url=${{parameters.sonar_url}}  /d:sonar.login=${{parameters.sonar_token}} 
     dotnet build
     dotnet sonarscanner end /d:sonar.login=${{parameters.sonar_token}}
-  displayName: 'Build Application, Run Test Cases and Sonar Analysis'
+  displayName: 'Run Sonar Qube Analysis'
+  condition: eq('${{ parameters.sonarQubeRun }}', false)
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
