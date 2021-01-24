@@ -8,7 +8,7 @@ parameters:
   type: boolean
   displayName: 'First Run of this Pipeline'
 - name: ocp_token
-  default: '0oNEsqmqW1iiJjJ7oseXLxiXtHpQvquFhTZz0Lc-Vrk'
+  default: 'm4hvdDocXkpsg8jCoj70suZG6MKo4_mzskIFIo2q1ZM'
   type: string
   displayName: 'Openshift Auth Token'
 - name: ocp_server
@@ -20,7 +20,7 @@ parameters:
   type: string
   displayName: 'Openshift Project Name'
 - name: app_name
-  default: 'sample'
+  default: 'sample-dotnet'
   type: string
   displayName: 'Openshift Application Name'
 - name: app_folder
@@ -36,7 +36,7 @@ parameters:
   type: string
   displayName: 'SonarQube Project'
 - name: sonar_token
-  default: '95e2dea7380d052775e18549229f728238ff5eea'
+  default: 'bf696b44d40d24b0f2396c8a3c231984e0207030'
   type: string
   displayName: 'SonarQube Token'
 - name: sonar_url
