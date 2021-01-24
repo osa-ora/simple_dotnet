@@ -55,28 +55,28 @@ steps:
   displayName: 'Run a Pipeline'
 
 - script: |
-    dotnet clean build 
-    dotnet clean build test --logger trx
+    dotnet clean build ${{parameters.app_folder}}
+    dotnet test ${{parameters.test_folder}} --logger trx
   displayName: 'Run Test Cases'
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
     testRunner: VSTest
-    testResultsFiles: '{{parameters.test_folder}}/**/*.trx'
+    testResultsFiles: '${{parameters.test_folder}}/**/*.trx'
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/{{parameters.app_folder}}/bin'
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/${{parameters.app_folder}}/bin'
     ArtifactName: 'drop'
     publishLocation: 'Container'
 - script: |
     dotnet sonarscanner begin /k:${{parameters.sonar_proj}} /d:sonar.host.url=${{parameters.sonar_url}}  /d:sonar.login=${{parameters.sonar_token}} 
-    dotnet build
+    dotnet build ${{parameters.app_folder}}
     dotnet sonarscanner end /d:sonar.login=${{parameters.sonar_token}}    
     rm -R {{parameters.app_folder}}/bin
     oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
     oc project ${{parameters.proj_name}}
     oc new-build --image-stream=dotnet:latest --binary=true --name=${{parameters.app_name}}
-    oc start-build ${{parameters.app_name}} --from-dir={{parameters.app_folder}}/.
+    oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/.
     oc logs -f bc/${{parameters.app_name}}
     oc new-app ${{parameters.app_name}} --as-deployment-config
     oc expose svc ${{parameters.app_name}} --port=8080 --name=${{parameters.app_name}}
@@ -89,7 +89,7 @@ steps:
     rm -R {{parameters.app_folder}}/bin
     oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
     oc project ${{parameters.proj_name}}
-    oc start-build ${{parameters.app_name}} --from-dir={{parameters.app_folder}}/.
+    oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/.
     oc logs -f bc/${{parameters.app_name}}
   displayName: 'Build, Scan and Deploy the application on subsequent runs..'
   condition: eq('${{ parameters.firstRun }}', false)
