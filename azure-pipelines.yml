@@ -65,7 +65,7 @@ steps:
     testResultsFiles: '${{parameters.test_folder}}/**/*.trx'
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/${{parameters.app_folder}}/bin/**/*.*'
+    PathtoPublish: '${{parameters.app_folder}}/bin/**/*.*'
     ArtifactName: 'drop'
     publishLocation: 'Container'
 - script: |
