@@ -1,0 +1,66 @@
+// Maintaned by Osama Oransa
+// First execution will fail as parameters won't populated
+// Subsequent runs will succeed if you provide correct parameters
+pipeline {
+    agent {
+       // Using the skopeo agent
+       label "jenkins-slave-skopeo"
+    }
+    stages {
+      stage('Setup Parameters') {
+            steps {
+                script { 
+                    properties([
+                        parameters([
+                        choice(
+                                choices: ['To Quay', 'To Openshift'], 
+                                name: 'copyDirection',
+                                description: 'Copy Container to'
+                            ),
+                        string(
+                                defaultValue: 'ooransa/tfs-agent-java8:latest', 
+                                name: 'quay_repo', 
+                                trim: true,
+                                description: 'Quay Repository'
+                            ),
+                        string(
+                                defaultValue: 'ooransa+test:token_here', 
+                                name: 'quay_id', 
+                                trim: true,
+                                description: 'Quay Id (user/token)'
+                            ),
+                        string(
+                                defaultValue: 'agent/newimage:latest', 
+                                name: 'ocp_img_name', 
+                                trim: true,
+                                description: 'Openshift Image Name (project/image-steam:tag'
+                            ),
+                        string(
+                                defaultValue: 'skopeo:token_here', 
+                                name: 'ocp_id', 
+                                trim: true,
+                                description: 'Openshift Access Token (user:token)'
+                            )
+                        ])
+                    ])
+                }
+            }
+    }
+      stage('Copy Image From Openshift To Quay') {
+        when {
+            expression { copyDirection == "To Quay" }
+        }
+        steps {
+          sh "skopeo copy docker://image-registry.openshift-image-registry.svc:5000/${ocp_img_name} docker://quay.io/${quay_repo} --src-tls-verify=false --src-creds='${ocp_id}' --dest-creds ${quay_id}"
+        }
+      }
+      stage('Copy Image From Quay To Openshift') {
+        when {
+            expression { copyDirection == "To Openshift" }
+        }
+        steps {
+          sh "skopeo copy docker://quay.io/${quay_repo} docker://image-registry.openshift-image-registry.svc:5000/${ocp_img_name} --dest-tls-verify=false --format=v2s2 --src-creds='${quay_id}' --dest-creds ${ocp_id}"
+        }
+      }
+    }
+}
