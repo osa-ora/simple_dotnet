@@ -1,0 +1,95 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: "tfs-agent-local-template"
+  annotations:
+    description: "The agent image for tfs."
+    iconClass: "fas fa-book-dead"
+    tags: "tfs,agent,dotnet,java,node,gradle"
+objects:
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${AGENT_NAME}-azure-secret
+    labels:
+      app: ${AGENT_NAME}
+  stringData:
+    azure-url: ${AZURE_URL}
+    azure-token: ${AZURE_TOKEN}
+    azure-pool: ${AZURE_POOL}
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      template.alpha.openshift.io/wait-for-ready: "true"
+    labels:
+      app: tfs_agent
+    name: ${AGENT_NAME}
+  spec:
+    replicas: 1
+    selector:
+      name: ${AGENT_NAME}
+    template:
+      metadata:
+        labels:
+          name: ${AGENT_NAME}
+      spec:
+        containers:
+        - env:
+          - name: AZP_URL
+            valueFrom:
+              secretKeyRef:
+                key: azure-url
+                name: ${AGENT_NAME}-azure-secret
+          - name: AZP_TOKEN
+            valueFrom:
+              secretKeyRef:
+                key: azure-token
+                name: ${AGENT_NAME}-azure-secret
+          - name: AZP_POOL
+            valueFrom:
+              secretKeyRef:
+                key: azure-pool
+                name: ${AGENT_NAME}-azure-secret
+          image: ${IMAGE_NAME}
+          imagePullPolicy: IfNotPresent
+          name: ${AGENT_NAME}
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${AGENT_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${IMAGE_NAME}
+          namespace: ${PROJECT_NAME}
+      type: ImageChange
+    - type: ConfigChange
+parameters:
+- name: "IMAGE_NAME"
+  description: "The name of the image in OCP to use"
+  value: "tfs-agent:latest"
+  required: true
+- name: "PROJECT_NAME"
+  description: "The name of the image in OCP to use"
+  value: "openshift"
+  required: true
+- name: "AGENT_NAME"
+  description: "The name of this agent"
+  value: "my-agent"
+  required: true
+- name: "AZURE_URL"
+  description: "The URL of Azure DevOps"
+  value: "https://dev.azure.com/osamaoransa"
+  required: true  
+- name: "AZURE_TOKEN"
+  description: "The token to access Azure DevOps"
+  value: "my-token"
+  required: true    
+- name: "AZURE_POOL"
+  description: "The pool name of this agent in Azure DevOps"
+  value: "ocp_pool"
+  required: true
