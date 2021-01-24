@@ -12,11 +12,11 @@ parameters:
   type: boolean
   displayName: 'Run Sonar Qube Analysis'
 - name: ocp_token
-  default: 'm4hvdDocXkpsg8jCoj70suZG6MKo4_mzskIFIo2q1ZM'
+  default: '2kG5KDPEI2OxGUDnQtpkuxf9iUB6RLkytosiUQECZBo'
   type: string
   displayName: 'Openshift Auth Token'
 - name: ocp_server
-  default: 'https://api.cluster-894c.894c.sandbox1092.opentlc.com:6443'
+  default: 'https://api.cluster-66a1.66a1.sandbox1049.opentlc.com:6443'
   type: string
   displayName: 'Openshift Server URL'
 - name: proj_name
@@ -24,7 +24,7 @@ parameters:
   type: string
   displayName: 'Openshift Project Name'
 - name: app_name
-  default: 'sample-dotnet'
+  default: 'dotnet-app'
   type: string
   displayName: 'Openshift Application Name'
 - name: app_folder
@@ -98,3 +98,7 @@ steps:
     oc logs -f bc/${{parameters.app_name}}
   displayName: 'Deploy the application on subsequent runs..'
   condition: eq('${{ parameters.firstRun }}', false)
+- script: |
+    sleep 15
+    curl $(oc get route ${app_name} -o jsonpath='{.spec.host}') | grep 'Web apps'
+  displayName: 'Smoke Test'
