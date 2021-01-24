@@ -430,11 +430,11 @@ parameters:
   type: boolean
   displayName: 'Run Sonar Qube Analysis'
 - name: ocp_token
-  default: 'm4hvdDocXkpsg8jCoj70suZG6MKo4_mzskIFIo2q1ZM'
+  default: 'token_here'
   type: string
   displayName: 'Openshift Auth Token'
 - name: ocp_server
-  default: 'https://api.cluster-894c.894c.sandbox1092.opentlc.com:6443'
+  default: 'https://api.cluster-66a1.66a1.....'
   type: string
   displayName: 'Openshift Server URL'
 - name: proj_name
@@ -442,7 +442,7 @@ parameters:
   type: string
   displayName: 'Openshift Project Name'
 - name: app_name
-  default: 'sample-dotnet'
+  default: 'dotnet-app'
   type: string
   displayName: 'Openshift Application Name'
 - name: app_folder
@@ -458,11 +458,11 @@ parameters:
   type: string
   displayName: 'SonarQube Project'
 - name: sonar_token
-  default: 'bf696b44d40d24b0f2396c8a3c231984e0207030'
+  default: 'token_here'
   type: string
   displayName: 'SonarQube Token'
 - name: sonar_url
-  default: 'http://sonarqube-cicd.apps.cluster-894c.894c.sandbox1092.opentlc.com'
+  default: 'http://sonarqube-cicd.apps.cluster...'
   type: string
   displayName: 'SonarQube Server URL'
 
@@ -516,11 +516,15 @@ steps:
     oc logs -f bc/${{parameters.app_name}}
   displayName: 'Deploy the application on subsequent runs..'
   condition: eq('${{ parameters.firstRun }}', false)
+- script: |
+    sleep 15
+    curl $(oc get route ${{parameters.app_name}} -o jsonpath='{.spec.host}') | grep 'Web apps'
+  displayName: 'Smoke Test'
 ```
 7- Run Azure DevOps Pipeline
 You'll see in the agent logs that it pick the job and execute it, and you will see in Azure DevOpe the pipleine exeuction:
 
-<img width="757" alt="Screen Shot 2021-01-24 at 11 55 35" src="https://user-images.githubusercontent.com/18471537/105626818-244c6580-5e3b-11eb-860c-43c329351f14.png">
+<img width="703" alt="Screen Shot 2021-01-24 at 18 15 33" src="https://user-images.githubusercontent.com/18471537/105636258-3d233e00-5e70-11eb-8aec-7cb9300bde0b.png">
 
 You can also see the published test results:
 
