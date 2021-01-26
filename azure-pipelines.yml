@@ -91,10 +91,10 @@ steps:
   displayName: 'Deploy the application on first runs..'
   condition: eq('${{ parameters.firstRun }}', true)
 - script: |   
-    rm -R {{parameters.app_folder}}/bin
+    #rm -R {{parameters.app_folder}}/bin
     oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
     oc project ${{parameters.proj_name}}
-    oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/.
+    oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/bin/.
     oc logs -f bc/${{parameters.app_name}}
   displayName: 'Deploy the application on subsequent runs..'
   condition: eq('${{ parameters.firstRun }}', false)
