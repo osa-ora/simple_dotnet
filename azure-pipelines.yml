@@ -12,7 +12,7 @@ parameters:
   type: boolean
   displayName: 'Run Sonar Qube Analysis'
 - name: ocp_token
-  default: '2kG5KDPEI2OxGUDnQtpkuxf9iUB6RLkytosiUQECZBo'
+  default: 'h5r5sbWqf9KvHZwOC2FVeghvLCn5UF29a5SX65AMrV0'
   type: string
   displayName: 'Openshift Auth Token'
 - name: ocp_server
@@ -60,7 +60,7 @@ steps:
 
 - script: |
     dotnet build
-    dotnet test ${{parameters.test_folder}} --logger trx
+    dotnet test ${{parameters.test_folder}} --logger trx --no-restore
   displayName: 'Build Application, Run Test Cases and Sonar Analysis'
 
 - script: |
