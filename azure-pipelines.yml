@@ -99,5 +99,4 @@ steps:
 - script: |
     sleep 15
     curl $(oc get route ${{parameters.app_name}} -o jsonpath='{.spec.host}') | grep 'Web apps'
-    oc logout
   displayName: 'Smoke Test'
