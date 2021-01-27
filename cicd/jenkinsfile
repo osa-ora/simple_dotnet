@@ -9,7 +9,6 @@ pipeline {
     agent {
     // Using the dotnet builder agent
        label "jenkins-slave-dotnet"
-       //"jenkins-dotnet-slave"
     }
   stages {
     stage('Setup Parameters') {
@@ -105,7 +104,6 @@ pipeline {
         steps{
             sh "dotnet build"
             archiveArtifacts '${app_folder}/bin/**/*.*'
-            sh "rm -R ${app_folder}/bin"
         }
     }
     stage('Deployment Approval') {
@@ -122,7 +120,7 @@ pipeline {
         steps {
             sh "oc project ${proj_name}"
             sh "oc new-build --image-stream=dotnet:latest --binary=true --name=${app_name}"
-            sh "oc start-build ${app_name} --from-dir=${app_folder}/."
+            sh "oc start-build ${app_name} --from-dir=${app_folder}/bin/Debug/netcoreapp3.1/."
             sh "oc logs -f bc/${app_name}"
             sh "oc new-app ${app_name} --as-deployment-config"
             sh "oc expose svc ${app_name} --port=8080 --name=${app_name}"
@@ -134,7 +132,7 @@ pipeline {
         }
         steps {
             sh "oc project ${proj_name}"
-            sh "oc start-build ${app_name} --from-dir=${app_folder}/."
+            sh "oc start-build ${app_name} --from-dir=${app_folder}/bin/Debug/netcoreapp3.1/."
             sh "oc logs -f bc/${app_name}"
         }
     }
