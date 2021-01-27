@@ -87,7 +87,6 @@ steps:
     oc logs -f bc/${{parameters.app_name}}
     oc new-app ${{parameters.app_name}} --as-deployment-config
     oc expose svc ${{parameters.app_name}} --port=8080 --name=${{parameters.app_name}}
-    oc logout
   displayName: 'Deploy the application on first runs..'
   condition: eq('${{ parameters.firstRun }}', true)
 - script: |   
@@ -95,12 +94,10 @@ steps:
     oc project ${{parameters.proj_name}}
     oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/bin/Debug/netcoreapp3.1/.
     oc logs -f bc/${{parameters.app_name}}
-    oc logout
   displayName: 'Deploy the application on subsequent runs..'
   condition: eq('${{ parameters.firstRun }}', false)
 - script: |
     sleep 15
-    oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
     curl $(oc get route ${{parameters.app_name}} -o jsonpath='{.spec.host}') | grep 'Web apps'
     oc logout
   displayName: 'Smoke Test'
