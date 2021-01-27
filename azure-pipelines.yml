@@ -100,5 +100,7 @@ steps:
   condition: eq('${{ parameters.firstRun }}', false)
 - script: |
     sleep 15
+    oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
     curl $(oc get route ${{parameters.app_name}} -o jsonpath='{.spec.host}') | grep 'Web apps'
+    oc logout
   displayName: 'Smoke Test'
