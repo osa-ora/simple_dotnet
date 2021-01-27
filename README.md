@@ -225,7 +225,7 @@ agent {
        label "jenkins-dotnet-slave"
     }
 ```
-
+Note that we provided the built binaries to the deployment, as both build and deploy machine has the same OS (both have linux-x64 as Runtime Identifier or RID), otherwise we need to use the target flag to specify the deployment machine OS or we can give Openshift the application folder and it will rebuild the application again before creating the container image.  
 The pipeline uses many parameters in 1st execution, it will fail then in subsequent executions it will prepare the parameters:
 
 <img width="1417" alt="Screen Shot 2021-01-24 at 16 40 30" src="https://user-images.githubusercontent.com/18471537/105633726-fa0e9e00-5e62-11eb-803d-ce4605aee9a2.png">
@@ -517,6 +517,8 @@ steps:
     curl $(oc get route ${{parameters.app_name}} -o jsonpath='{.spec.host}') | grep 'Web apps'
   displayName: 'Smoke Test'
 ```
+Note that we provided the built binaries to the deployment, as both build and deploy machine has the same OS (both have linux-x64 as Runtime Identifier or RID), otherwise we need to use the target flag to specify the deployment machine OS or we can give Openshift the application folder and it will rebuild the application again before creating the container image.  
+
 7- Run Azure DevOps Pipeline
 You'll see in the agent logs that it pick the job and execute it, and you will see in Azure DevOpe the pipleine exeuction:
 
