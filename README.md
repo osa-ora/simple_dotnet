@@ -82,7 +82,6 @@ pipeline {
     agent {
     // Using the dotnet builder agent
        label "jenkins-slave-dotnet"
-       //"jenkins-dotnet-slave"
     }
   stages {
     stage('Setup Parameters') {
@@ -178,7 +177,6 @@ pipeline {
         steps{
             sh "dotnet build"
             archiveArtifacts '${app_folder}/bin/**/*.*'
-            sh "rm -R ${app_folder}/bin"
         }
     }
     stage('Deployment Approval') {
@@ -195,7 +193,7 @@ pipeline {
         steps {
             sh "oc project ${proj_name}"
             sh "oc new-build --image-stream=dotnet:latest --binary=true --name=${app_name}"
-            sh "oc start-build ${app_name} --from-dir=${app_folder}/."
+            sh "oc start-build ${app_name} --from-dir=${app_folder}/bin/Debug/netcoreapp3.1/."
             sh "oc logs -f bc/${app_name}"
             sh "oc new-app ${app_name} --as-deployment-config"
             sh "oc expose svc ${app_name} --port=8080 --name=${app_name}"
@@ -207,7 +205,7 @@ pipeline {
         }
         steps {
             sh "oc project ${proj_name}"
-            sh "oc start-build ${app_name} --from-dir=${app_folder}/."
+            sh "oc start-build ${app_name} --from-dir=${app_folder}/bin/Debug/netcoreapp3.1/."
             sh "oc logs -f bc/${app_name}"
         }
     }
@@ -430,11 +428,11 @@ parameters:
   type: boolean
   displayName: 'Run Sonar Qube Analysis'
 - name: ocp_token
-  default: 'token_here'
+  default: 'h5r5sbWqf9KvHZwOC2FVeghvLCn5UF29a5SX65AMrV0'
   type: string
   displayName: 'Openshift Auth Token'
 - name: ocp_server
-  default: 'https://api.cluster-66a1.66a1.....'
+  default: 'https://api.cluster-66a1.66a1.sandbox1049.opentlc.com:6443'
   type: string
   displayName: 'Openshift Server URL'
 - name: proj_name
@@ -458,11 +456,11 @@ parameters:
   type: string
   displayName: 'SonarQube Project'
 - name: sonar_token
-  default: 'token_here'
+  default: 'bf696b44d40d24b0f2396c8a3c231984e0207030'
   type: string
   displayName: 'SonarQube Token'
 - name: sonar_url
-  default: 'http://sonarqube-cicd.apps.cluster...'
+  default: 'http://sonarqube-cicd.apps.cluster-894c.894c.sandbox1092.opentlc.com'
   type: string
   displayName: 'SonarQube Server URL'
 
@@ -478,7 +476,7 @@ steps:
 
 - script: |
     dotnet build
-    dotnet test ${{parameters.test_folder}} --logger trx
+    dotnet test ${{parameters.test_folder}} --logger trx --no-restore
   displayName: 'Build Application, Run Test Cases and Sonar Analysis'
 
 - script: |
@@ -498,21 +496,19 @@ steps:
     ArtifactName: 'drop'
     publishLocation: 'Container'
 - script: |    
-    rm -R {{parameters.app_folder}}/bin
     oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
     oc project ${{parameters.proj_name}}
     oc new-build --image-stream=dotnet:latest --binary=true --name=${{parameters.app_name}}
-    oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/.
+    oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/bin/Debug/netcoreapp3.1/.
     oc logs -f bc/${{parameters.app_name}}
     oc new-app ${{parameters.app_name}} --as-deployment-config
     oc expose svc ${{parameters.app_name}} --port=8080 --name=${{parameters.app_name}}
   displayName: 'Deploy the application on first runs..'
   condition: eq('${{ parameters.firstRun }}', true)
 - script: |   
-    rm -R {{parameters.app_folder}}/bin
     oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
     oc project ${{parameters.proj_name}}
-    oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/.
+    oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/bin/Debug/netcoreapp3.1/.
     oc logs -f bc/${{parameters.app_name}}
   displayName: 'Deploy the application on subsequent runs..'
   condition: eq('${{ parameters.firstRun }}', false)
