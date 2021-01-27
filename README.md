@@ -411,8 +411,20 @@ Note: once the image is built, you can use the other template file: docker/bc_tf
 
 <img width="694" alt="Screen Shot 2021-01-09 at 14 45 35" src="https://user-images.githubusercontent.com/18471537/104092045-0a7f2000-528a-11eb-86a8-981ce5a971d6.png">
 
-6- Create a new pipeline in Azure DevOps.  
-Note: You need to edit sonar qube settings or remove them if you don't have one.
+6- Create Service Account for Azure DevOps. 
+
+```
+oc project dev
+oc create sa azure-devops
+//dev is our deployment project target 
+oc policy add-role-to-user edit system:serviceaccount:dev:azure-devops
+//get the secret to use it in the login command
+oc describe secret azure-devops-token
+```
+Now you have the token to use it in the pipeline or Openshift Azure DevOps plugin.  
+
+7- Create a new pipeline in Azure DevOps.  
+We can use DevOps Openshift plugin or write OC commands directly as in this pipeline:  
 ```
 # Starter pipeline
 # Start with a minimal pipeline that you can customize to build and deploy your code.
@@ -428,7 +440,7 @@ parameters:
   type: boolean
   displayName: 'Run Sonar Qube Analysis'
 - name: ocp_token
-  default: 'h5r5sbWqf9KvHZwOC2FVeghvLCn5UF29a5SX65AMrV0'
+  default: 'token_here'
   type: string
   displayName: 'Openshift Auth Token'
 - name: ocp_server
@@ -503,6 +515,7 @@ steps:
     oc logs -f bc/${{parameters.app_name}}
     oc new-app ${{parameters.app_name}} --as-deployment-config
     oc expose svc ${{parameters.app_name}} --port=8080 --name=${{parameters.app_name}}
+    oc logout
   displayName: 'Deploy the application on first runs..'
   condition: eq('${{ parameters.firstRun }}', true)
 - script: |   
@@ -510,16 +523,19 @@ steps:
     oc project ${{parameters.proj_name}}
     oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/bin/Debug/netcoreapp3.1/.
     oc logs -f bc/${{parameters.app_name}}
+    oc logout
   displayName: 'Deploy the application on subsequent runs..'
   condition: eq('${{ parameters.firstRun }}', false)
 - script: |
     sleep 15
+    oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
     curl $(oc get route ${{parameters.app_name}} -o jsonpath='{.spec.host}') | grep 'Web apps'
+    oc logout
   displayName: 'Smoke Test'
 ```
 Note that we provided the built binaries to the deployment, as both build and deploy machine has the same OS (both have linux-x64 as Runtime Identifier or RID), otherwise we need to use the target flag to specify the deployment machine OS or we can give Openshift the application folder and it will rebuild the application again before creating the container image.  
 
-7- Run Azure DevOps Pipeline
+8- Run Azure DevOps Pipeline and Check the results
 You'll see in the agent logs that it pick the job and execute it, and you will see in Azure DevOpe the pipleine exeuction:
 
 <img width="703" alt="Screen Shot 2021-01-24 at 18 15 33" src="https://user-images.githubusercontent.com/18471537/105636258-3d233e00-5e70-11eb-8aec-7cb9300bde0b.png">
