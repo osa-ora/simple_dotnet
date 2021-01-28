@@ -79,6 +79,9 @@ steps:
     PathtoPublish: '$(System.DefaultWorkingDirectory)/${{parameters.app_folder}}/bin'
     ArtifactName: 'drop'
     publishLocation: 'Container'
+- task: ManualValidation@0
+  inputs:
+    notifyUsers: 'Approve Deployment ?'
 - script: |    
     oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
     oc project ${{parameters.proj_name}}
