@@ -156,7 +156,9 @@ pipeline {
     stage('Unit Testing & Code Coverage') {
       steps {
         sh "dotnet test --logger trx"
-        archiveArtifacts '${test_folder}/TestResults/**/*.*'
+        //you must install mstest plugin to publish the unit testing report
+        mstest testResultsFile:"**/*.trx", keepLongStdio: true
+
       }
     }
     stage('Code Scanning by Sonar Qube') {
@@ -238,6 +240,10 @@ Note that we provided the built binaries to the deployment, as both build and de
 The pipeline uses many parameters in 1st execution, it will fail then in subsequent executions it will prepare the parameters:
 
 <img width="1425" alt="Screen Shot 2021-01-28 at 13 01 16" src="https://user-images.githubusercontent.com/18471537/106132620-d7cf9580-616c-11eb-8dca-b3782320a436.png">
+
+Also note that you need to install MSTest Jenkins plugin in order to be able to publish the test results to Jenkins: From Manage Jenkins ==> Plugin Manager 
+
+<img width="1004" alt="Screen Shot 2021-01-31 at 10 45 07" src="https://user-images.githubusercontent.com/18471537/106379107-5cf7bc00-63b2-11eb-93b4-ab910254fee5.png">
 
 
 ## 5) Deployment Across Environments
