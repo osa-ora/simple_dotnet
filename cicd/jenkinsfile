@@ -82,8 +82,9 @@ pipeline {
     }
     stage('Unit Testing & Code Coverage') {
       steps {
-        sh "dotnet test --logger trx"
-        //you must install mstest plugin to publish the unit testing report
+        sh "dotnet restore"
+        sh "dotnet test --no-restore --logger trx"
+        //junit '${test_folder}/TestResults/**/*.trx'
         mstest testResultsFile:"**/*.trx", keepLongStdio: true
 
       }
@@ -94,13 +95,13 @@ pipeline {
         }
         steps {
             sh "dotnet sonarscanner begin /k:\"${sonarqube_proj}\" /d:sonar.host.url=\"${sonarqube_url}\" /d:sonar.login=\"${sonarqube_token}\""
-            sh "dotnet build"
+            sh "dotnet build --no-restore"
             sh "dotnet sonarscanner end /d:sonar.login=\"${sonarqube_token}\""        
         }
     }
     stage('Build Deployment Package'){
         steps{
-            sh "dotnet build"
+            sh "dotnet build --no-restore"
             archiveArtifacts '${app_folder}/bin/**/*.*'
         }
     }
