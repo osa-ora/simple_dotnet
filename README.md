@@ -432,8 +432,8 @@ Note: once the image is built, you can use the other template file: docker/bc_tf
 ```
 oc project dev
 oc create sa azure-devops
-//dev is our deployment project target 
-oc policy add-role-to-user edit system:serviceaccount:dev:azure-devops
+//dev is our deployment project target (you can change it if you are using another project name)
+oc policy add-role-to-user edit system:serviceaccount:dev:azure-devops -n dev
 //get the secret to use it in the login command
 oc describe secret azure-devops-token
 ```
