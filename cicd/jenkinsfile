@@ -83,7 +83,9 @@ pipeline {
     stage('Unit Testing & Code Coverage') {
       steps {
         sh "dotnet test --logger trx"
-        archiveArtifacts '${test_folder}/TestResults/**/*.*'
+        //you must install mstest plugin to publish the unit testing report
+        mstest testResultsFile:"**/*.trx", keepLongStdio: true
+
       }
     }
     stage('Code Scanning by Sonar Qube') {
