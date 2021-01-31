@@ -1,0 +1,33 @@
+name: .NET
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --logger trx --verbosity normal
+    - name: Fast Webhook
+      uses: jasongitmail/fast-webhook@v1.1.4
+      with:
+        # The webhook URL to send the request to.
+        url: https://api.cluster-66a1.66a1.sandbox1049.opentlc.com:6443/apis/build.openshift.io/v1/namespaces/dev/buildconfigs/simple-dotnet-git/webhooks/9dfa4520e81ce0e7/generic
+        # The stringified JSON body to be sent, if any.
+        # json: optional, default is {}
+          
