@@ -14,7 +14,7 @@ To use Jenkins on Openshift for CI/CD, first we need to build DotNet Jenkins Sla
 
 ## 1) Build The Environment
 
-You can run use the build :  
+Run the following commands to build the environment and provision Jenkins and its slaves templates:  
 
 ```
 oc project cicd //this is the project for cicd
