@@ -83,10 +83,9 @@ pipeline {
     stage('Unit Testing & Code Coverage') {
       steps {
         sh "dotnet restore"
-        sh "dotnet test --no-restore --logger trx"
-        //junit '${test_folder}/TestResults/**/*.trx'
+        sh "dotnet test --no-restore --collect:\"XPlat Code Coverage\" --logger trx"
         mstest testResultsFile:"**/*.trx", keepLongStdio: true
-
+        cobertura coberturaReportFile: '**/coverage.cobertura.xml', enableNewApi: true, lineCoverageTargets: '0, 0, 0'
       }
     }
     stage('Code Scanning by Sonar Qube') {
