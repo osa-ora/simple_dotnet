@@ -60,7 +60,7 @@ steps:
 
 - script: |
     dotnet build
-    dotnet test ${{parameters.test_folder}} --logger trx --no-restore
+    dotnet test --no-restore --collect:\"XPlat Code Coverage\" --logger trx
   displayName: 'Build Application, Run Test Cases and Sonar Analysis'
 
 - script: |
@@ -74,6 +74,10 @@ steps:
   inputs:
     testRunner: VSTest
     testResultsFiles: '${{parameters.test_folder}}/**/*.trx'
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: 'Cobertura'
+    summaryFileLocation: '${{parameters.test_folder}}/**/coverage.cobertura.xml'
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(System.DefaultWorkingDirectory)/${{parameters.app_folder}}/bin'
