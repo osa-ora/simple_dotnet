@@ -514,7 +514,7 @@ steps:
 
 - script: |
     dotnet build
-    dotnet test ${{parameters.test_folder}} --logger trx --no-restore
+    dotnet test --no-restore --collect:"XPlat Code Coverage" --logger trx
   displayName: 'Build Application, Run Test Cases and Sonar Analysis'
 
 - script: |
@@ -528,6 +528,10 @@ steps:
   inputs:
     testRunner: VSTest
     testResultsFiles: '${{parameters.test_folder}}/**/*.trx'
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: 'Cobertura'
+    summaryFileLocation: '${{parameters.test_folder}}/**/coverage.cobertura.xml'
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(System.DefaultWorkingDirectory)/${{parameters.app_folder}}/bin'
@@ -541,7 +545,6 @@ steps:
     oc logs -f bc/${{parameters.app_name}}
     oc new-app ${{parameters.app_name}} --as-deployment-config
     oc expose svc ${{parameters.app_name}} --port=8080 --name=${{parameters.app_name}}
-    oc logout
   displayName: 'Deploy the application on first runs..'
   condition: eq('${{ parameters.firstRun }}', true)
 - script: |   
@@ -549,14 +552,11 @@ steps:
     oc project ${{parameters.proj_name}}
     oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/bin/Debug/netcoreapp3.1/.
     oc logs -f bc/${{parameters.app_name}}
-    oc logout
   displayName: 'Deploy the application on subsequent runs..'
   condition: eq('${{ parameters.firstRun }}', false)
 - script: |
     sleep 15
-    oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
     curl $(oc get route ${{parameters.app_name}} -o jsonpath='{.spec.host}') | grep 'Web apps'
-    oc logout
   displayName: 'Smoke Test'
 ```
 Note that we provided the built binaries to the deployment, as both build and deploy machine has the same OS (both have linux-x64 as Runtime Identifier or RID), otherwise we need to use the target flag to specify the deployment machine OS or we can give Openshift the application folder and it will rebuild the application again before creating the container image.  
