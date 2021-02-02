@@ -1,0 +1,107 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+parameters:
+- name: firstRun
+  default: false
+  type: boolean
+  displayName: 'First Run of this Pipeline'
+- name: sonarQubeRun
+  default: false
+  type: boolean
+  displayName: 'Run Sonar Qube Analysis'
+- name: ocp_token
+  default: 'token_here'
+  type: string
+  displayName: 'Openshift Auth Token'
+- name: ocp_server
+  default: 'https://api.cluster-66a1.66a1.sandbox1049.opentlc.com:6443'
+  type: string
+  displayName: 'Openshift Server URL'
+- name: proj_name
+  default: 'dev'
+  type: string
+  displayName: 'Openshift Project Name'
+- name: app_name
+  default: 'dotnet-app'
+  type: string
+  displayName: 'Openshift Application Name'
+- name: app_folder
+  default: 'sample_app'
+  type: string
+  displayName: 'Application Folder'
+- name: test_folder
+  default: 'sample_tests'
+  type: string
+  displayName: 'Test Folder'
+- name: sonar_proj
+  default: 'dotnet'
+  type: string
+  displayName: 'SonarQube Project'
+- name: sonar_token
+  default: 'bf696b44d40d24b0f2396c8a3c231984e0207030'
+  type: string
+  displayName: 'SonarQube Token'
+- name: sonar_url
+  default: 'http://sonarqube-cicd.apps.cluster-894c.894c.sandbox1092.opentlc.com'
+  type: string
+  displayName: 'SonarQube Server URL'
+
+trigger:
+- main
+
+pool:
+  name: 'ocp_pool_java8'
+
+steps:
+- script: echo 'start pipeline'
+  displayName: 'Run a Pipeline'
+
+- script: |
+    dotnet build
+    dotnet test --no-restore --collect:\"XPlat Code Coverage\" --logger trx
+  displayName: 'Build Application, Run Test Cases and Sonar Analysis'
+
+- script: |
+    dotnet sonarscanner begin /k:${{parameters.sonar_proj}} /d:sonar.host.url=${{parameters.sonar_url}}  /d:sonar.login=${{parameters.sonar_token}} 
+    dotnet build
+    dotnet sonarscanner end /d:sonar.login=${{parameters.sonar_token}}
+  displayName: 'Run Sonar Qube Analysis'
+  condition: eq('${{ parameters.sonarQubeRun }}', true)
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testRunner: VSTest
+    testResultsFiles: '${{parameters.test_folder}}/**/*.trx'
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: 'Cobertura'
+    summaryFileLocation: '${{parameters.test_folder}}/**/coverage.cobertura.xml'
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/${{parameters.app_folder}}/bin'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+- script: |    
+    oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
+    oc project ${{parameters.proj_name}}
+    oc new-build --image-stream=dotnet:latest --binary=true --name=${{parameters.app_name}}
+    oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/bin/Debug/netcoreapp3.1/.
+    oc logs -f bc/${{parameters.app_name}}
+    oc new-app ${{parameters.app_name}} --as-deployment-config
+    oc expose svc ${{parameters.app_name}} --port=8080 --name=${{parameters.app_name}}
+  displayName: 'Deploy the application on first runs..'
+  condition: eq('${{ parameters.firstRun }}', true)
+- script: |   
+    oc login --token=${{parameters.ocp_token}} --server=${{parameters.ocp_server}} --insecure-skip-tls-verify=true
+    oc project ${{parameters.proj_name}}
+    oc start-build ${{parameters.app_name}} --from-dir=${{parameters.app_folder}}/bin/Debug/netcoreapp3.1/.
+    oc logs -f bc/${{parameters.app_name}}
+  displayName: 'Deploy the application on subsequent runs..'
+  condition: eq('${{ parameters.firstRun }}', false)
+- script: |
+    sleep 15
+    curl $(oc get route ${{parameters.app_name}} -o jsonpath='{.spec.host}') | grep 'Web apps'
+  displayName: 'Smoke Test'
+  
