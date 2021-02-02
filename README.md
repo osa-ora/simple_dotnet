@@ -470,7 +470,7 @@ parameters:
   type: string
   displayName: 'Openshift Auth Token'
 - name: ocp_server
-  default: 'https://api.cluster-66a1.66a1.sandbox1049.opentlc.com:6443'
+  default: 'https://api.cluster-66a1.66a1...opentlc.com:6443'
   type: string
   displayName: 'Openshift Server URL'
 - name: proj_name
@@ -582,11 +582,11 @@ This is alternative to the command line: oc start-build command
 
 1) Pick the Webhook URL from your Openshift BuildConfig 
 
-<img width="976" alt="Screen Shot 2021-02-02 at 15 11 50" src="https://user-images.githubusercontent.com/18471537/106604971-084a7180-6569-11eb-85d6-fb8a01ff93a5.png">
+<img width="976" alt="Screen Shot 2021-02-02 at 15 11 50" src="https://user-images.githubusercontent.com/18471537/106605751-f0272200-6569-11eb-87e7-ab6e2dd2b3f9.png">
 
 2) Configure GitHub webhook
 
-<img width="1245" alt="Screen Shot 2021-02-02 at 15 05 06" src="https://user-images.githubusercontent.com/18471537/106605062-22844f80-6569-11eb-82e9-50beb181fba0.png">
+<img width="1245" alt="Screen Shot 2021-02-02 at 15 05 06" src="https://user-images.githubusercontent.com/18471537/106605767-f3baa900-6569-11eb-893c-493b0c7f10d0.png">
 
 
 3) Push any new code and your CI/CD will be working. 
@@ -629,7 +629,7 @@ jobs:
       uses: enflo/curl-action@v1.2
       with:
       # curl arguments
-        curl: -k -X POST https://api.cluster-66a1.66a1.sandbox1049.opentlc.com:6443/apis/build.openshift.io/v1/namespaces/dev/buildconfigs/simple-dotnet-git/webhooks/....../generic
+        curl: -k -X POST https://api.cluster-66a1......opentlc.com:6443/apis/build.openshift.io/v1/namespaces/dev/buildconfigs/simple-dotnet-git/webhooks/....../generic
           
 ```
 You can also finally use Openshift GitHub plugin or any platform plugin as we saw in Jenkins Openshift plugin or Azure DevOpe Openshift Plugin.  
