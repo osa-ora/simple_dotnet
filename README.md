@@ -156,10 +156,9 @@ pipeline {
     stage('Unit Testing & Code Coverage') {
       steps {
         sh "dotnet restore"
-        sh "dotnet test --no-restore --logger trx"
-        //junit '${test_folder}/TestResults/**/*.trx'
+        sh "dotnet test --no-restore --collect:\"XPlat Code Coverage\" --logger trx"
         mstest testResultsFile:"**/*.trx", keepLongStdio: true
-
+        cobertura coberturaReportFile: '**/coverage.cobertura.xml', enableNewApi: true, lineCoverageTargets: '0, 0, 0'
       }
     }
     stage('Code Scanning by Sonar Qube') {
@@ -246,6 +245,17 @@ Also note that you need to install MSTest Jenkins plugin in order to be able to 
 
 <img width="1004" alt="Screen Shot 2021-01-31 at 10 45 07" src="https://user-images.githubusercontent.com/18471537/106379107-5cf7bc00-63b2-11eb-93b4-ab910254fee5.png">
 
+To be able to execute the code coverage report publishing and enforcement you need to install also Cobertura plugin
+
+<img width="812" alt="Screen Shot 2021-02-02 at 14 09 41" src="https://user-images.githubusercontent.com/18471537/106600248-cfa79980-6562-11eb-9ef4-14e225027bc8.png">
+
+Currently we set the coverage target to be 0 otherwise it will fail without enough line test coverage: lineCoverageTargets: '0, 0, 0'
+
+```
+[Cobertura] Code coverage enforcement failed for the following metrics:
+
+[Cobertura]     Lines's stability is 0.0 and set mininum stability is 70.0.
+```
 
 ## 5) Deployment Across Environments
 
