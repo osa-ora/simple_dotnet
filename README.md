@@ -239,7 +239,7 @@ agent {
 Note that we provided the built binaries to the deployment, as both build and deploy machine has the same OS (both have linux-x64 as Runtime Identifier or RID), otherwise we need to use the target flag to specify the deployment machine OS or we can give Openshift the application folder and it will rebuild the application again before creating the container image.  
 The pipeline uses many parameters in 1st execution, it will fail then in subsequent executions it will prepare the parameters:
 
-<img width="1425" alt="Screen Shot 2021-01-28 at 13 01 16" src="https://user-images.githubusercontent.com/18471537/106132620-d7cf9580-616c-11eb-8dca-b3782320a436.png">
+<img width="1434" alt="Screen Shot 2021-02-02 at 14 29 16" src="https://user-images.githubusercontent.com/18471537/106600410-0f6e8100-6563-11eb-9799-7031bca61708.png">
 
 Also note that you need to install MSTest Jenkins plugin in order to be able to publish the test results to Jenkins: From Manage Jenkins ==> Plugin Manager 
 
