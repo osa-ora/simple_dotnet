@@ -571,3 +571,65 @@ You can also see the published test results:
 <img width="1497" alt="Screen Shot 2021-02-02 at 14 59 21" src="https://user-images.githubusercontent.com/18471537/106603718-578fa280-6567-11eb-9af1-0156f7c3fa7d.png">
 
 <img width="1483" alt="Screen Shot 2021-02-02 at 14 59 41" src="https://user-images.githubusercontent.com/18471537/106603692-4e9ed100-6567-11eb-94c4-86b6dd0a484a.png">
+
+
+## 8) Using Webhooks & Openshift BuildConfig for CI/CD
+You can also use webhooks as a way to build your application inside Openshift, and place this Webhook in whatever tool that can fire webhooks to make the CI/CD work smoothly.
+
+For example: 
+You can enable GitHub Webhook with any push of the code to fire Openshift BuildConfig to start a new build.
+This is alternative to the command line: oc start-build command  
+
+1) Pick the Webhook URL from your Openshift BuildConfig 
+
+<img width="976" alt="Screen Shot 2021-02-02 at 15 11 50" src="https://user-images.githubusercontent.com/18471537/106604971-084a7180-6569-11eb-85d6-fb8a01ff93a5.png">
+
+2) Configure GitHub webhook
+
+<img width="1245" alt="Screen Shot 2021-02-02 at 15 05 06" src="https://user-images.githubusercontent.com/18471537/106605062-22844f80-6569-11eb-82e9-50beb181fba0.png">
+
+
+3) Push any new code and your CI/CD will be working. 
+
+
+As another alternative, you can also make use of GitHub Actions to build a workflow that execute build, test and then deploy to Openshift using webhook. 
+
+<img width="565" alt="Screen Shot 2021-02-02 at 15 05 41" src="https://user-images.githubusercontent.com/18471537/106605191-49428600-6569-11eb-8f16-a6fcd9571408.png">
+
+A simple workflow file looks like:  
+```
+name: .NET
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --logger trx --verbosity normal
+    - name: CURL-ACTION
+      # You may pin to the exact commit or the version.
+      # uses: enflo/curl-action@fabe347922c7a9e88bafa15c4b7d6326ea802695
+      uses: enflo/curl-action@v1.2
+      with:
+      # curl arguments
+        curl: -k -X POST https://api.cluster-66a1.66a1.sandbox1049.opentlc.com:6443/apis/build.openshift.io/v1/namespaces/dev/buildconfigs/simple-dotnet-git/webhooks/....../generic
+          
+```
+You can also finally use Openshift GitHub plugin or any platform plugin as we saw in Jenkins Openshift plugin or Azure DevOpe Openshift Plugin.  
