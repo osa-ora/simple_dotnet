@@ -564,8 +564,10 @@ Note that we provided the built binaries to the deployment, as both build and de
 8- Run Azure DevOps Pipeline and Check the results
 You'll see in the agent logs that it pick the job and execute it, and you will see in Azure DevOpe the pipleine exeuction:
 
-<img width="703" alt="Screen Shot 2021-01-24 at 18 15 33" src="https://user-images.githubusercontent.com/18471537/105636258-3d233e00-5e70-11eb-8aec-7cb9300bde0b.png">
+<img width="704" alt="Screen Shot 2021-02-02 at 14 59 03" src="https://user-images.githubusercontent.com/18471537/106603745-61b1a100-6567-11eb-9101-76315a11125c.png">
 
 You can also see the published test results:
 
-<img width="1344" alt="Screen Shot 2021-01-09 at 14 59 47" src="https://user-images.githubusercontent.com/18471537/104092247-5aaab200-528b-11eb-891d-bd144f1a6492.png">
+<img width="1497" alt="Screen Shot 2021-02-02 at 14 59 21" src="https://user-images.githubusercontent.com/18471537/106603718-578fa280-6567-11eb-9af1-0156f7c3fa7d.png">
+
+<img width="1483" alt="Screen Shot 2021-02-02 at 14 59 41" src="https://user-images.githubusercontent.com/18471537/106603692-4e9ed100-6567-11eb-94c4-86b6dd0a484a.png">
