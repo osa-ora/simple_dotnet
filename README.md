@@ -249,7 +249,7 @@ To be able to execute the code coverage report publishing and enforcement you ne
 
 <img width="812" alt="Screen Shot 2021-02-02 at 14 09 41" src="https://user-images.githubusercontent.com/18471537/106600248-cfa79980-6562-11eb-9ef4-14e225027bc8.png">
 
-Currently we set the coverage target to be 0 otherwise it will fail without enough line test coverage: lineCoverageTargets: '0, 0, 0'
+Currently we set the coverage target to be 0 otherwise it will fail without enough line test coverage: lineCoverageTargets: '80, 60, 70'
 
 ```
 [Cobertura] Code coverage enforcement failed for the following metrics:
