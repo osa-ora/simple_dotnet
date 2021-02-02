@@ -60,7 +60,7 @@ steps:
 
 - script: |
     dotnet build
-    dotnet test --no-restore --collect:\"XPlat Code Coverage\" --logger trx
+    dotnet test ${{parameters.test_folder}} --no-restore --collect:\"XPlat Code Coverage\" --logger trx
   displayName: 'Build Application, Run Test Cases and Sonar Analysis'
 
 - script: |
