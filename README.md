@@ -17,21 +17,23 @@ To use Jenkins on Openshift for CI/CD, first we need to build DotNet Jenkins Sla
 Run the following commands to build the environment and provision Jenkins and its slaves templates:  
 
 ```
-oc project cicd //this is the project for cicd
+oc new-project cicd //this is the project for cicd
 
 oc create -f bc_jenkins_slave_template.yaml -n cicd //this will add the template to use 
-or you can use it directly from the GitHub: oc process -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/bc_jenkins_slave_template.yaml -n cicd | oc create -f -
-
 Now use the template to create the Jenkins slave template
 oc describe template jenkins-slave-template //to see the template details
 oc process -p GIT_URL=https://github.com/osa-ora/simple_dotnet -p GIT_BRANCH=main -p GIT_CONTEXT_DIR=cicd -p DOCKERFILE_PATH=dockerfile_dotnet_node -p IMAGE_NAME=jenkins-dotnet-slave jenkins-slave-template | oc create -f -
 
-oc start-build jenkins-dotnet-slave 
-oc logs bc/jenkins-dotnet-slave -f
+or you can use it directly from the GitHub: 
+oc process -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/bc_jenkins_slave_template.yaml -n cicd | oc create -f -
+
+
+oc start-build bc/jenkins-slave-dotnet
+oc logs bc/jenkins-slave-dotnet -f
 
 oc new-app jenkins-persistent  -p MEMORY_LIMIT=2Gi  -p VOLUME_CAPACITY=4Gi -n cicd
 
-oc project dev //this is project for application development
+oc new-project dev //this is project for application development
 oc policy add-role-to-user edit system:serviceaccount:cicd:default -n dev
 oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n dev
 
