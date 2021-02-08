@@ -70,11 +70,11 @@ objects:
     - type: ConfigChange
 parameters:
 - name: "IMAGE_NAME"
-  description: "The name of the image in OCP to use"
+  description: "The name of the agent image in OCP to use"
   value: "tfs-agent:latest"
   required: true
 - name: "PROJECT_NAME"
-  description: "The name of the image in OCP to use"
+  description: "The project name that contains this agent image"
   value: "openshift"
   required: true
 - name: "AGENT_NAME"
