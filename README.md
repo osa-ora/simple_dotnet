@@ -44,7 +44,7 @@ Otherwise you can do it manually as following:
 
 From inside Jenkins --> go to Manage Jenkins ==> Configure Jenkins then scroll to cloud section:
 https://{JENKINS_URL}/configureClouds
-Now click on Pod Templates, add new one with name "jenkins-dotnet-slave", label "jenkins-dotnet-slave", container template name "jnlp", docker image "image-registry.openshift-image-registry.svc:5000/cicd/jenkins-dotnet-slave" 
+Now click on Pod Templates, add new one with name "dotnet-jenkins-dotnet", label "dotnet-jenkins-slave", container template name "jnlp", docker image "image-registry.openshift-image-registry.svc:5000/cicd/jenkins-dotnet-slave" 
 
 See the picture:
 <img width="1242" alt="Screen Shot 2021-01-04 at 12 09 05" src="https://user-images.githubusercontent.com/18471537/103524212-d2d93800-4e85-11eb-818b-21e7e8811ba4.png">
@@ -61,7 +61,12 @@ Make sure to select DotNet here.
 
 ## 4) Build Jenkins CI/CD using Jenkins File
 
-Now create new pipeline for the project, where we checkout the code, run unit testing, run sonar qube analysis, build the application, get manual approval for deployment and finally deploy it on Openshift.
+Now create new pipeline for the project, where we checkout the code, run unit testing, run sonar qube analysis, build the application, get manual approval for deployment and finally deploy it on Openshift.  
+
+Add this as pipeline script from SCM and populate it with our main branch in the git repository and cicd/jenkinsfile configurations.  
+
+<img width="961" alt="Screen Shot 2021-02-09 at 17 02 22" src="https://user-images.githubusercontent.com/18471537/107382573-b1104800-6af8-11eb-9cdc-492b85e41104.png">
+
 Here is the content of the file (as in cicd/jenkinsfile)
 
 ```
