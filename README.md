@@ -19,16 +19,8 @@ Run the following commands to build the environment and provision Jenkins and it
 ```
 oc new-project cicd //this is the project for cicd
 
-oc create -f bc_jenkins_slave_template.yaml -n cicd //this will add the template to use 
-Now use the template to create the Jenkins slave template
-oc describe template jenkins-slave-template //to see the template details
-oc process -p GIT_URL=https://github.com/osa-ora/simple_dotnet -p GIT_BRANCH=main -p GIT_CONTEXT_DIR=cicd -p DOCKERFILE_PATH=dockerfile_dotnet_node -p IMAGE_NAME=jenkins-dotnet-slave jenkins-slave-template | oc create -f -
-
-or you can use it directly from the GitHub: 
 oc process -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/bc_jenkins_slave_template.yaml -n cicd | oc create -f -
-
-
-oc start-build bc/jenkins-slave-dotnet
+oc start-build bc/dotnet-jenkins-slave
 oc logs bc/jenkins-slave-dotnet -f
 
 oc new-app jenkins-persistent  -p MEMORY_LIMIT=2Gi  -p VOLUME_CAPACITY=4Gi -n cicd
@@ -84,7 +76,7 @@ pipeline {
 	}
     agent {
     // Using the dotnet builder agent
-       label "jenkins-slave-dotnet"
+       label "dotnet-jenkins-slave"
     }
   stages {
     stage('Setup Parameters') {
@@ -235,7 +227,7 @@ As you can see this pipeline pick the dotnet slave image that we built, note the
 ```
 agent {
     // Using the dotnet builder agent
-       label "jenkins-dotnet-slave"
+       label "dotnet-jenkins-slave"
     }
 ```
 Note that we provided the built binaries to the deployment, as both build and deploy machine has the same OS (both have linux-x64 as Runtime Identifier or RID), otherwise we need to use the target flag to specify the deployment machine OS or we can give Openshift the application folder and it will rebuild the application again before creating the container image.  
