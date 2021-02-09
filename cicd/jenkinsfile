@@ -9,7 +9,7 @@ pipeline {
 	}
     agent {
     // Using the dotnet builder agent
-       label "jenkins-slave-dotnet"
+       label "dotnet-jenkins-slave"
     }
   stages {
     stage('Setup Parameters') {
