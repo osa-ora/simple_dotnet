@@ -332,7 +332,10 @@ oc adm policy add-role-to-user system:image-builder -n cicd system:serviceaccoun
 oc describe secret skopeo-token -n cicd
 ```
 You can also use any user with privilage to do this.  
-5. Run Jenkins pipleline in that Skopeo slave to execute the copy command: (as in docker/jenkinsfile_skopeo_copy)
+5. Create & Run Jenkins pipleline in that Skopeo slave to execute the copy command: (as in docker/jenkinsfile_skopeo_copy)
+
+<img width="968" alt="Screen Shot 2021-02-10 at 10 24 04" src="https://user-images.githubusercontent.com/18471537/107486929-46115080-6b8e-11eb-8062-5023f9538990.png">
+
 ```
 // Maintaned by Osama Oransa
 // First execution will fail as parameters won't populated
