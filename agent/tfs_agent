@@ -38,7 +38,8 @@ RUN dotnet tool install dotnet-sonarscanner --global
 ENV PATH="${PATH}:~/.dotnet/tools"
 
 RUN apt install default-jre \
-    && apt install openjdk-11-jre-headless
+    && apt install openjdk-11-jre-headless \
+    && apt install maven
 
 RUN apt install nodejs \
    && apt install npm
