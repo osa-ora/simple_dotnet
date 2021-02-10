@@ -52,7 +52,7 @@ trigger:
 - main
 
 pool:
-  name: 'ocp_pool_java8'
+  name: 'ocp_pool'
 
 steps:
 - script: echo 'start pipeline'
