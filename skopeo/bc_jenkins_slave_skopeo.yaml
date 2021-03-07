@@ -1,0 +1,69 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: "jenkins-slave-template"
+  annotations:
+    description: "The slave image for jenkins."
+    iconClass: "icon-jenkins"
+    tags: "jenkins,slave,dotnet,gradle"
+objects:
+- kind: "BuildConfig"
+  apiVersion: "v1"
+  metadata:
+    name: ${IMAGE_NAME}
+  spec:
+    env:
+      - name: "GIT_SSL_NO_VERIFY"
+        value: ${GIT_SSL_NO_VERIFY}
+    source:
+      type: "Git"
+      git:
+        ref: ${GIT_BRANCH}
+        uri: ${GIT_URL}
+      contextDir: ${GIT_CONTEXT_DIR}
+    strategy:
+      type: "Docker"
+      dockerStrategy:
+        dockerfilePath: ${DOCKERFILE_PATH}
+        env:
+          - name: GIT_SSL_NO_VERIFY
+            value: ${GIT_SSL_NO_VERIFY}
+    output:
+      to:
+        kind: "ImageStreamTag"
+        name: "${IMAGE_NAME}:${IMAGE_STREAM_TAG}"
+- kind: "ImageStream"
+  apiVersion: "v1"
+  metadata:
+    name: ${IMAGE_NAME}
+    labels:
+      role: jenkins-slave
+    annotations:
+      role: jenkins-slave 
+parameters:
+- name: "GIT_URL"
+  description: "The URL of the repository with slave dockerfile."
+  value: "https://github.com/osa-ora/simple_dotnet"
+  required: true
+- name: "GIT_BRANCH"
+  description: "The branch within the repository which contains the applicable source code"
+  value: "main"
+  required: true
+- name: "GIT_CONTEXT_DIR"
+  description: "The sub directory location of the docker file"
+  value: "skopeo"
+- name: "DOCKERFILE_PATH"
+  description: "The path to the dockerfile to use when building the image e.g. dockerfile_dotnet or dockerfile_gradle."
+  required: true
+  value: "dockerfile_skopeo"
+- name: "IMAGE_NAME"
+  description: "The name of the image this build will produce"
+  value: "skopeo-jenkins-slave"
+  required: true
+- name: "IMAGE_STREAM_TAG"
+  description: "The tag to associate with the image"
+  value: "latest"
+  required: true
+- name: "GIT_SSL_NO_VERIFY"
+  value: "true"
+  required: true
