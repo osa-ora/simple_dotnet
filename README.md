@@ -21,7 +21,7 @@ oc new-project cicd //this is the project for cicd
 
 oc process -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/bc_jenkins_slave_template.yaml -n cicd | oc create -f -
 oc start-build bc/dotnet-jenkins-slave
-oc logs bc/jenkins-slave-dotnet -f
+oc logs bc/dotnet-jenkins-slave -f
 
 oc new-app jenkins-persistent  -p MEMORY_LIMIT=2Gi  -p VOLUME_CAPACITY=4Gi -n cicd
 
