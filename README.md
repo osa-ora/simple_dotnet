@@ -320,7 +320,9 @@ From Quay Side:
 From Openshift Side:  
 3. Create Skopeo Jenkins slave image:
 ```
-oc process -p GIT_URL=https://github.com/osa-ora/simple_dotnet -p GIT_BRANCH=main -p GIT_CONTEXT_DIR=skopeo -p DOCKERFILE_PATH=dockerfile_skopeo -p IMAGE_NAME=jenkins-slave-skopeo jenkins-slave-template | oc create -f -
+oc process -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/skopeo/bc_jenkins_slave_skopeo.yaml | oc create -f -
+oc start-build bc/skopeo-jenkins-slave
+oc logs -f bc/skopeo-jenkins-slave
 ```
 Make sure this new image exist in Jenkins Pod Templates as we did before.  
 4. Create User with enough privilages to pull the image for example skopeo user and get the token of this user
