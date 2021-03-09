@@ -10,6 +10,17 @@ dotnet build
 dotnet run
 ```
 
+To deploy the application directly into Openshift using s2i you can use the folloing:
+```
+oc new-app --name=mydotnet dotnet~https://github.com/osa-ora/simple_dotnet
+oc expose svc/mydotnet
+```
+
+Note that as we have more than one project in this repository (application and test project), we have added .s2i/environment file which point to the application that we need to deploy into Openshift using s2i. 
+```
+DOTNET_STARTUP_PROJECT=sample_app/sample.csproj
+```
+
 To use Jenkins on Openshift for CI/CD, first we need to build DotNet Jenkins Slave template to use in our CI/CD 
 
 ## 1) Build The Environment
