@@ -648,3 +648,39 @@ jobs:
           
 ```
 You can also finally use Openshift GitHub plugin or any platform plugin as we saw in Jenkins Openshift plugin or Azure DevOpe Openshift Plugin.  
+
+## 9) Using Tekton Pipeline
+
+Similar to what we did in Jenkins or Azure DevOps, we can build the pipeline using TekTon. 
+To do this we need to start by installing the SonarQube Tekton task for dotnet and DotNet Test Tekton task as well using:
+
+```
+oc project cicd
+oc apply -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/dotnet-sonarqube-scanner-with-login-param.yaml-n cicd
+oc apply -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/dotnet-test.yaml-n cicd
+```
+Note: In both tasks, I used a ready made container image that has all the required tools already installed from the following source: https://hub.docker.com/r/nosinovacao/dotnet-sonar , you can use your own image or build it on Openshift, also I picked the 3.1 tag image, in case you need to do this for dotnet core 5.1, you can pick another image tag.
+
+Now, we can import the pipeline and grant the "pipeline" user edit rights on dev namespace to deploy the application there.
+```
+oc project cicd
+oc apply -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/tekton.yaml -n cicd
+oc policy add-role-to-user edit system:serviceaccount:cicd:pipeline -n dev
+```
+The following graph shows the pipeline steps and flow:
+
+<img width="1431" alt="Screen Shot 2021-10-27 at 17 05 08" src="https://user-images.githubusercontent.com/18471537/139094689-cf5c12d8-2037-4658-af15-1fa6fd96ec09.png">
+
+You can now, start the pipeline and select the proper parameters and fill in the dotnet-workspace where the pipeline shared input/outputs
+
+<img width="864" alt="Screen Shot 2021-10-27 at 17 12 31" src="https://user-images.githubusercontent.com/18471537/139095241-3f07c433-21fa-4d1b-abde-b0611f183891.png">
+
+Once the execution is completed, you will see the pipeline run output and logs and you can then access the deployed application:
+
+With SonarQube execution:
+<img width="1477" alt="Screen Shot 2021-10-27 at 17 04 32" src="https://user-images.githubusercontent.com/18471537/139094709-fcdf8175-3216-4cca-ace3-9b1c2528078e.png">
+
+With No SonarQube execution:
+<img width="1425" alt="Screen Shot 2021-10-27 at 17 26 36" src="https://user-images.githubusercontent.com/18471537/139097109-33fdbd8e-e7ee-4d66-9b18-72ab4b095991.png">
+
+Note: We have used source2image task to deploy the application, but we could just use Openshift binary build (oc) for the generated jar file similar to what we did in Jenkins or Azure DevOps pipeline, but we used s2i task here for more demonstration of the available options.
