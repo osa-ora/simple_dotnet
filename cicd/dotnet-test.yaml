@@ -1,0 +1,28 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: dotnet-test
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/categories: Testing
+    tekton.dev/tags: test
+    tekton.dev/displayName: "dotnet build test"
+spec:
+  description: >-
+    The following task can be used to perform build test for dotnet core applications.
+  workspaces:
+    - name: source-dir
+  params:
+    - name: TEST_OPTIONS
+      description: Testing command options
+      default: "--collect:\"XPlat Code Coverage\" --logger trx"
+  steps:
+    - name: test-dotnet-app
+      image: nosinovacao/dotnet-sonar:21.07.0
+      workingDir: $(workspaces.source-dir.path)
+      script: |
+        #!/bin/bash
+        dotnet restore
+        dotnet test --no-restore $(params.TEST_OPTIONS)
