@@ -1,0 +1,44 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: dotnet-sonarqube-scanner
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/categories: Security
+    tekton.dev/tags: security
+    tekton.dev/displayName: "dotnet sonarqube scanner"
+spec:
+  description: >-
+    The following task can be used to perform static analysis on the source code
+    provided the SonarQube server is hosted
+    SonarQube is the leading tool for continuously inspecting the Code Quality and Security
+    of your codebases, all while empowering development teams. Analyze over 25 popular
+    programming languages including C#, VB.Net, JavaScript, TypeScript and C++. It detects
+    bugs, vulnerabilities and code smells across project branches and pull requests.
+  workspaces:
+    - name: source-dir
+  params:
+    - name: SONAR_HOST_URL
+      description: Host URL where the sonarqube server is running
+      default: ""
+    - name: SONAR_PROJECT_KEY
+      description: Project's unique key
+      default: ""
+    - name: SONAR_LOGIN
+      description: Login Token
+      default: ""
+  steps:
+    - name: run-dotnet-sonarscanner
+      image: nosinovacao/dotnet-sonar:21.07.0
+      workingDir: $(workspaces.source-dir.path)
+      script: |
+        #!/bin/bash
+        dotnet restore
+        #dotnet build
+        dotnet tool install dotnet-sonarscanner --global
+        export PATH="$PATH:/tekton/home/.dotnet/tools"
+        dotnet sonarscanner begin /k:"$(params.SONAR_PROJECT_KEY)" /d:sonar.host.url="$(params.SONAR_HOST_URL)" /d:sonar.login="$(params.SONAR_LOGIN)"
+        dotnet build --no-restore
+        dotnet sonarscanner end /d:sonar.login="$(params.SONAR_LOGIN)"
