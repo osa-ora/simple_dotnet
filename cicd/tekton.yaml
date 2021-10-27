@@ -1,0 +1,383 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: my-dotnet-app-pipeline
+  namespace: cicd
+spec:
+  params:
+    - default: 6d3cd9d574d946ab8f9ff5505ac75345cf347436
+      description: SonarQube Token
+      name: sonarqube_token
+      type: string
+    - default: 'http://sonarqube-cicd.apps.cluster-344b.344b.sandbox1597.opentlc.com'
+      description: SonarQube URL
+      name: sonarqube_url
+      type: string
+    - default: dotnet
+      description: SonarQube Project
+      name: sonarqube_proj
+      type: string
+    - default: 'false'
+      description: Run SonarQube?
+      name: run-sonarqube
+      type: string
+    - default: 'false'
+      description: First Run?
+      name: first-run
+      type: string
+    - default: dotnet-app
+      description: Application Name?
+      name: app-name
+      type: string
+    - default: dev
+      description: Project Name?
+      name: project-name
+      type: string
+  tasks:
+    - name: git-clone
+      params:
+        - name: url
+          value: 'https://github.com/osa-ora/simple_dotnet'
+        - name: revision
+          value: main
+        - name: submodules
+          value: 'true'
+        - name: depth
+          value: '1'
+        - name: sslVerify
+          value: 'true'
+        - name: deleteExisting
+          value: 'true'
+        - name: verbose
+          value: 'true'
+        - name: gitInitImage
+          value: >-
+            registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:da1aedf0b17f2b9dd2a46edc93ff1c0582989414b902a28cd79bad8a035c9ea4
+        - name: userHome
+          value: /tekton/home
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: dotnet-workspace
+    - name: deplpy-app-1
+      params:
+        - name: SCRIPT
+          value: >-
+            oc new-app --docker-image
+            image-registry.openshift-image-registry.svc:5000/$(params.project-name)/$(params.app-name)
+            -n $(params.project-name)
+        - name: VERSION
+          value: latest
+      runAfter:
+        - s2i-dotnet-gv4
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      when:
+        - input: $(params.first-run)
+          operator: in
+          values:
+            - 'true'
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: deplpy-app-2
+      params:
+        - name: SCRIPT
+          value: >-
+            oc new-app --docker-image
+            image-registry.openshift-image-registry.svc:5000/$(params.project-name)/$(params.app-name)
+            -n $(params.project-name)
+        - name: VERSION
+          value: latest
+      runAfter:
+        - s2i-dotnet
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      when:
+        - input: $(params.first-run)
+          operator: in
+          values:
+            - 'true'
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: expose-route-1
+      params:
+        - name: SCRIPT
+          value: oc expose service/$(params.app-name) -n $(params.project-name)
+        - name: VERSION
+          value: latest
+      runAfter:
+        - deplpy-app-1
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      when:
+        - input: $(params.first-run)
+          operator: in
+          values:
+            - 'true'
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: smoke-test
+      params:
+        - name: SCRIPT
+          value: >-
+            curl $(oc get route $(params.app-name) -n=$(params.project-name) -o
+            jsonpath='{.spec.host}') | grep 'Web apps'
+        - name: VERSION
+          value: latest
+      runAfter:
+        - wait
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: wait
+      params:
+        - name: SCRIPT
+          value: sleep 25
+        - name: VERSION
+          value: latest
+      runAfter:
+        - s2i-dotnet
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      when:
+        - input: $(params.first-run)
+          operator: in
+          values:
+            - 'false'
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: wait-4
+      params:
+        - name: SCRIPT
+          value: sleep 25
+        - name: VERSION
+          value: latest
+      runAfter:
+        - s2i-dotnet-gv4
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      when:
+        - input: $(params.first-run)
+          operator: in
+          values:
+            - 'false'
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: smoke-test-4
+      params:
+        - name: SCRIPT
+          value: >-
+            curl $(oc get route $(params.app-name) -n=$(params.project-name) -o
+            jsonpath='{.spec.host}') | grep 'Web apps'
+        - name: VERSION
+          value: latest
+      runAfter:
+        - wait-4
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: wait-3
+      params:
+        - name: SCRIPT
+          value: sleep 25
+        - name: VERSION
+          value: latest
+      runAfter:
+        - expose-route-1
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: smoke-test-3
+      params:
+        - name: SCRIPT
+          value: >-
+            curl $(oc get route $(params.app-name) -n=$(params.project-name) -o
+            jsonpath='{.spec.host}') | grep 'Web apps'
+        - name: VERSION
+          value: latest
+      runAfter:
+        - wait-3
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: wait-2
+      params:
+        - name: SCRIPT
+          value: sleep 25
+        - name: VERSION
+          value: latest
+      runAfter:
+        - expose-route-2
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: smoke-test-2
+      params:
+        - name: SCRIPT
+          value: >-
+            curl $(oc get route $(params.app-name) -n=$(params.project-name) -o
+            jsonpath='{.spec.host}') | grep 'Web apps'
+        - name: VERSION
+          value: latest
+      runAfter:
+        - wait-2
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: expose-route-2
+      params:
+        - name: SCRIPT
+          value: oc expose service/$(params.app-name) -n $(params.project-name)
+        - name: VERSION
+          value: latest
+      runAfter:
+        - deplpy-app-2
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      when:
+        - input: $(params.first-run)
+          operator: in
+          values:
+            - 'true'
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: dotnet-sonarqube-scanner
+      params:
+        - name: SONAR_HOST_URL
+          value: $(params.sonarqube_url)
+        - name: SONAR_PROJECT_KEY
+          value: $(params.sonarqube_proj)
+        - name: SONAR_LOGIN
+          value: $(params.sonarqube_token)
+      runAfter:
+        - dotnet-test
+      taskRef:
+        kind: Task
+        name: dotnet-sonarqube-scanner
+      when:
+        - input: $(params.run-sonarqube)
+          operator: in
+          values:
+            - 'true'
+      workspaces:
+        - name: source-dir
+          workspace: dotnet-workspace
+    - name: s2i-dotnet
+      params:
+        - name: BUILDER_IMAGE
+          value: >-
+            registry.redhat.io/rhel8/buildah@sha256:99cae35f40c7ec050fed3765b2b27e0b8bbea2aa2da7c16408e2ca13c60ff8ee
+        - name: VERSION
+          value: 3.1-ubi8
+        - name: PATH_CONTEXT
+          value: .
+        - name: TLSVERIFY
+          value: 'false'
+        - name: IMAGE
+          value: >-
+            image-registry.openshift-image-registry.svc:5000/$(params.project-name)/$(params.app-name)
+      runAfter:
+        - dotnet-sonarqube-scanner
+      taskRef:
+        kind: ClusterTask
+        name: s2i-dotnet
+      workspaces:
+        - name: source
+          workspace: dotnet-workspace
+    - name: s2i-dotnet-gv4
+      params:
+        - name: BUILDER_IMAGE
+          value: >-
+            registry.redhat.io/rhel8/buildah@sha256:99cae35f40c7ec050fed3765b2b27e0b8bbea2aa2da7c16408e2ca13c60ff8ee
+        - name: VERSION
+          value: 3.1-ubi8
+        - name: PATH_CONTEXT
+          value: .
+        - name: TLSVERIFY
+          value: 'false'
+        - name: IMAGE
+          value: >-
+            image-registry.openshift-image-registry.svc:5000/$(params.project-name)/$(params.app-name)
+      runAfter:
+        - dotnet-test
+      taskRef:
+        kind: ClusterTask
+        name: s2i-dotnet
+      when:
+        - input: $(params.run-sonarqube)
+          operator: in
+          values:
+            - 'false'
+      workspaces:
+        - name: source
+          workspace: dotnet-workspace
+    - name: dotnet-test
+      params:
+        - name: TEST_OPTIONS
+          value: '--collect:"XPlat Code Coverage" --logger trx'
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: dotnet-test
+      workspaces:
+        - name: source-dir
+          workspace: dotnet-workspace
+  workspaces:
+    - name: dotnet-workspace
