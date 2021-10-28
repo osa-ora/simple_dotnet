@@ -684,3 +684,30 @@ With No SonarQube execution:
 <img width="1425" alt="Screen Shot 2021-10-27 at 17 26 36" src="https://user-images.githubusercontent.com/18471537/139097109-33fdbd8e-e7ee-4d66-9b18-72ab4b095991.png">
 
 Note: We have used source2image task to deploy the application, but we could just use Openshift binary build (oc) for the generated .dll files similar to what we did in Jenkins or Azure DevOps pipeline, but we used s2i task here for more demonstration of the available options.
+
+** Automate the pipeline using Tekton Triggers:
+
+Now to automate the pipeline we can add trigger to our pipeline to fire it once a new push is created, go to pipeline and click on Add trigger. 
+
+<img width="135" alt="Screen Shot 2021-10-28 at 08 33 34" src="https://user-images.githubusercontent.com/18471537/139200543-9ee9bf9d-7486-491e-b50a-3c3282305147.png">
+
+Then select GitHub Push to fire the pipeline on push event, as you can see many triggers are available for GitHub, GitLab and BitBucket at the moment. 
+
+<img width="874" alt="Screen Shot 2021-10-28 at 08 37 26" src="https://user-images.githubusercontent.com/18471537/139200638-c404efaf-9218-487e-8a25-3030e74d00b8.png">
+
+Now let's take the generated webhook url from our pipeline. 
+
+<img width="687" alt="Screen Shot 2021-10-28 at 08 33 59" src="https://user-images.githubusercontent.com/18471537/139200738-8576af9d-a695-4886-b9bb-2298edea1aac.png">
+
+Now go to GitHub settings and add Webhook. 
+
+<img width="520" alt="Screen Shot 2021-10-28 at 08 34 44" src="https://user-images.githubusercontent.com/18471537/139201058-e4c2d89c-1de4-45bd-b38e-9dcc2096382f.png">
+
+Finally push any code to your repository and it will trigger the pipeline execution. 
+
+<img width="1466" alt="Screen Shot 2021-10-28 at 08 35 07" src="https://user-images.githubusercontent.com/18471537/139201232-ab44a2be-e503-441e-992b-94ed6db440af.png">
+
+
+
+
+
