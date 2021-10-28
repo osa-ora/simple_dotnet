@@ -683,4 +683,4 @@ With SonarQube execution:
 With No SonarQube execution:
 <img width="1425" alt="Screen Shot 2021-10-27 at 17 26 36" src="https://user-images.githubusercontent.com/18471537/139097109-33fdbd8e-e7ee-4d66-9b18-72ab4b095991.png">
 
-Note: We have used source2image task to deploy the application, but we could just use Openshift binary build (oc) for the generated jar file similar to what we did in Jenkins or Azure DevOps pipeline, but we used s2i task here for more demonstration of the available options.
+Note: We have used source2image task to deploy the application, but we could just use Openshift binary build (oc) for the generated .dll files similar to what we did in Jenkins or Azure DevOps pipeline, but we used s2i task here for more demonstration of the available options.
