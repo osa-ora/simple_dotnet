@@ -656,8 +656,8 @@ To do this we need to start by installing the SonarQube Tekton task for dotnet a
 
 ```
 oc project cicd
-oc apply -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/dotnet-sonarqube-scanner-with-login-param.yaml-n cicd
-oc apply -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/dotnet-test.yaml-n cicd
+oc apply -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/dotnet-sonarqube-scanner-with-login-param.yaml -n cicd
+oc apply -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/dotnet-test.yaml -n cicd
 ```
 Note: In both tasks, I used a ready made container image that has all the required tools already installed from the following source: https://hub.docker.com/r/nosinovacao/dotnet-sonar , you can use your own image or build it on Openshift, also I picked the 3.1 tag image, in case you need to do this for dotnet core 5.1, you can pick another image tag.
 
