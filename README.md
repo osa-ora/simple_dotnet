@@ -62,7 +62,14 @@ See the picture:
 
 ## 3) (Optional) SonarQube on Openshift
 Provision SonarQube for code scanning on Openshift using the attached template.
+```
 oc process -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/sonarqube-persistent-template.yaml | oc create -f -
+
+Or 
+oc create -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/sonarqube-persistent-template.yaml
+Then provision the SonarQube from the catalog
+```
+Login using admin/admin then update the password. 
 
 Open SonarQube and create new project, give it a name, generate a token and use them as parameters in our next CI/CD steps
 
