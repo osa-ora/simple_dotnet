@@ -33,20 +33,20 @@ objects:
         containers:
         - name: sonarqube
           imagePullPolicy: Always
-          image: docker.io/sonarqube:8-community
+          image: docker.io/sonarqube:latest
           ports:
           - containerPort: 9000
             protocol: TCP
           volumeMounts:
-          - mountPath: /opt/sq/temp
+          - mountPath: /opt/sonarqube/temp
             name: sonarqube-temp
-          - mountPath: /opt/sq/conf
+          - mountPath: /opt/sonarqube/conf
             name: sonarqube-conf
-          - mountPath: /opt/sq/data
+          - mountPath: /opt/sonarqube/data
             name: sonarqube-data
-          - mountPath: /opt/sq/extensions
+          - mountPath: /opt/sonarqube/extensions
             name: sonarqube-extensions
-          - mountPath: /opt/sq/logs
+          - mountPath: /opt/sonarqube/logs
             name: sonarqube-logs
           livenessProbe:
             failureThreshold: 10
