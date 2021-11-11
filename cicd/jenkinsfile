@@ -19,6 +19,17 @@ pipeline {
                         parameters([
                         choice(
                                 choices: ['Yes', 'No'], 
+                                name: 'slackEnabled',
+                                description: 'Send Slack Notifications?'
+                            ),
+                        string(
+                                defaultValue: 'https://hooks.slack.com/services/{webhook_url_here}', 
+                                name: 'slack_webhook', 
+                                trim: true,
+                                description: 'Slack WebHook URL'
+                            ),
+                        choice(
+                                choices: ['Yes', 'No'], 
                                 name: 'runSonarQube',
                                 description: 'Run Sonar Qube Analysis?'
                             ),
@@ -53,7 +64,7 @@ pipeline {
                                 description: 'Application Folder'
                             ),
                         string(
-                                defaultValue: 'http://sonarqube-cicd.apps.cluster-894c.894c.sandbox1092.opentlc.com', 
+                                defaultValue: 'sonar_qune_url_here', 
                                 name: 'sonarqube_url', 
                                 trim: true,
                                 description: 'Sonar Qube URL'
@@ -65,7 +76,7 @@ pipeline {
                                 description: 'Sonar Qube Project Name'
                             ),
                         password(
-                                defaultValue: '25eece0a65f49b639dd7051480f84fd7445f5f5b', 
+                                defaultValue: 'sonarqube_token_here', 
                                 name: 'sonarqube_token', 
                                 description: 'Sonar Qube Token'
                             )
@@ -73,6 +84,14 @@ pipeline {
                     ])
                 }
             }
+    }
+    stage('Start Notification'){
+      when {
+        expression { slackEnabled == "Yes" }
+      }
+      steps {
+        sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Pipeline execution started for ${git_url} - main branch \"}' ${slack_webhook}"  
+      }
     }
     stage('Code Checkout') {
       steps {
@@ -153,5 +172,18 @@ pipeline {
             sh "curl \$(oc get route ${app_name} -n=${proj_name} -o jsonpath='{.spec.host}') | grep 'Web apps'"
         }
     }
+    stage('End Notification'){
+      when {
+        expression { slackEnabled == "Yes" }
+      }
+      steps {
+        sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Pipeline execution finished for ${git_url} - main branch \"}' ${slack_webhook}"  
+      }
+    }
   }
+  post {
+      failure {
+            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Pipeline execution failed for ${git_url} - main branch \"}' ${slack_webhook}"  
+      }
+   }
 } // pipeline
