@@ -4,7 +4,36 @@ metadata:
   name: my-dotnet-app-pipeline
   namespace: cicd
 spec:
+  finally:
+    - name: slack-notification
+      params:
+        - name: webhook-secret
+          value: webhook-secret
+        - name: message
+          value: >-
+            Pipeline execution results $(tasks.status) for $(params.git_url) -
+            $(params.git_branch)
+        - name: bot-name
+          value: Tekton Bot
+        - name: icon-emoji
+          value: ':robot_face:'
+      taskRef:
+        kind: Task
+        name: send-to-webhook-slack
+      when:
+        - input: $(params.slack_enabled)
+          operator: in
+          values:
+            - 'true'
   params:
+    - default: 'https://github.com/osa-ora/simple_dotnet'
+      description: Git Repository
+      name: git_url
+      type: string
+    - default: main
+      description: Git Branch
+      name: git_branch
+      type: string
     - default: 6d3cd9d574d946ab8f9ff5505ac75345cf347436
       description: SonarQube Token
       name: sonarqube_token
@@ -33,13 +62,17 @@ spec:
       description: Project Name?
       name: project-name
       type: string
+    - default: 'true'
+      description: Send Slack Notification
+      name: slack_enabled
+      type: string
   tasks:
     - name: git-clone
       params:
         - name: url
-          value: 'https://github.com/osa-ora/simple_dotnet'
+          value: $(params.git_url)
         - name: revision
-          value: main
+          value: $(params.git_branch)
         - name: submodules
           value: 'true'
         - name: depth
@@ -381,3 +414,5 @@ spec:
           workspace: dotnet-workspace
   workspaces:
     - name: dotnet-workspace
+      optional: false
+  resources: []
