@@ -412,6 +412,28 @@ spec:
       workspaces:
         - name: source-dir
           workspace: dotnet-workspace
+    - name: start-slack-notify
+      params:
+        - name: webhook-secret
+          value: webhook-secret
+        - name: message
+          value: >-
+            Pipeline execution started for $(params.git_url) -
+            $(params.git_branch)
+        - name: bot-name
+          value: Tekton Bot
+        - name: icon-emoji
+          value: ':robot_face:'
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: send-to-webhook-slack
+      when:
+        - input: $(params.slack_enabled)
+          operator: in
+          values:
+            - 'true'
   workspaces:
     - name: dotnet-workspace
       optional: false
