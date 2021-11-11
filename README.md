@@ -659,15 +659,27 @@ You can also finally use Openshift GitHub plugin or any platform plugin as we sa
 ## 9) Using Tekton Pipeline
 
 Similar to what we did in Jenkins or Azure DevOps, we can build the pipeline using TekTon. 
-To do this we need to start by installing the SonarQube Tekton task for dotnet and DotNet Test Tekton task as well using:
+To do this we need to start by installing the SonarQube Tekton task for dotnet, DotNet Test Tekton task and Slack notification task using the following commands:
 
 ```
 oc project cicd
 oc apply -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/dotnet-sonarqube-scanner-with-login-param.yaml -n cicd
 oc apply -f https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/dotnet-test.yaml -n cicd
+oc apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/send-to-webhook-slack/0.1/send-to-webhook-slack.yaml
 ```
-Note: In both tasks, I used a ready made container image that has all the required tools already installed from the following source: https://hub.docker.com/r/nosinovacao/dotnet-sonar , you can use your own image or build it on Openshift, also I picked the 3.1 tag image, in case you need to do this for dotnet core 5.1, you can pick another image tag.
+Note: In both dotnet test and sonarqube tasks, I used a ready made container image that has all the required tools already installed from the following source: https://hub.docker.com/r/nosinovacao/dotnet-sonar , you can use your own image or build it on Openshift, also I picked the 3.1 tag image, in case you need to do this for dotnet core 5.1, you can pick another image tag.
 
+To configure Slcak notification, you need to have a slack channel and add app to it, then enable incoming-webhooks for this app.
+Then you need to create a secret in Openshift with this incoming-wehbook url:
+```
+echo "kind: Secret
+apiVersion: v1
+metadata:
+  name: webhook-secret
+stringData:
+  url: https://hooks.slack.com/services/........{the complete slack webhook url}" | oc create -f -
+```
+The slack channel will use this secret to post in the channel (note that this is an optional task).
 Now, we can import the pipeline and grant the "pipeline" user edit rights on dev namespace to deploy the application there.
 ```
 oc project cicd
@@ -676,7 +688,7 @@ oc policy add-role-to-user edit system:serviceaccount:cicd:pipeline -n dev
 ```
 The following graph shows the pipeline steps and flow:
 
-<img width="1431" alt="Screen Shot 2021-10-27 at 17 05 08" src="https://user-images.githubusercontent.com/18471537/139094689-cf5c12d8-2037-4658-af15-1fa6fd96ec09.png">
+<img width="1515" alt="Screen Shot 2021-11-11 at 13 00 39" src="https://user-images.githubusercontent.com/18471537/141286994-d112c485-6c30-4649-9b97-2b59c6accc6f.png">
 
 You can now, start the pipeline and select the proper parameters and fill in the dotnet-workspace where the pipeline shared input/outputs
 
@@ -684,11 +696,15 @@ You can now, start the pipeline and select the proper parameters and fill in the
 
 Once the execution is completed, you will see the pipeline run output and logs and you can then access the deployed application:
 
-With SonarQube execution:
-<img width="1477" alt="Screen Shot 2021-10-27 at 17 04 32" src="https://user-images.githubusercontent.com/18471537/139094709-fcdf8175-3216-4cca-ace3-9b1c2528078e.png">
+With successful execution:
+<img width="1478" alt="Screen Shot 2021-11-11 at 12 08 37" src="https://user-images.githubusercontent.com/18471537/141286196-b1e6ab47-8111-46b3-b5f8-8ca704ccf257.png">
 
-With No SonarQube execution:
-<img width="1425" alt="Screen Shot 2021-10-27 at 17 26 36" src="https://user-images.githubusercontent.com/18471537/139097109-33fdbd8e-e7ee-4d66-9b18-72ab4b095991.png">
+With failed execution:
+<img width="1483" alt="Screen Shot 2021-11-11 at 12 08 22" src="https://user-images.githubusercontent.com/18471537/141286713-2d4bb879-827a-498b-84f7-f719377cfca8.png">
+
+You will get slack notifications accordingly with the pipeline execution results, if you don't want to use it, you can just set the slack notification parameter in the pipeline as false. 
+
+<img width="674" alt="Screen Shot 2021-11-11 at 12 53 26" src="https://user-images.githubusercontent.com/18471537/141286000-c5886779-59bb-445f-866c-c2e3c943171b.png">
 
 Note: We have used source2image task to deploy the application, but we could just use Openshift binary build (oc) for the generated .dll files similar to what we did in Jenkins or Azure DevOps pipeline, but we used s2i task here for more demonstration of the available options.
 
