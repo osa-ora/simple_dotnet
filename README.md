@@ -688,7 +688,7 @@ oc policy add-role-to-user edit system:serviceaccount:cicd:pipeline -n dev
 ```
 The following graph shows the pipeline steps and flow:
 
-<img width="1515" alt="Screen Shot 2021-11-11 at 13 00 39" src="https://user-images.githubusercontent.com/18471537/141286994-d112c485-6c30-4649-9b97-2b59c6accc6f.png">
+<img width="1499" alt="Screen Shot 2021-11-11 at 15 48 58" src="https://user-images.githubusercontent.com/18471537/141309151-c632805a-f119-4609-af07-402156dd6f07.png">
 
 You can now, start the pipeline and select the proper parameters and fill in the dotnet-workspace where the pipeline shared input/outputs
 
@@ -697,14 +697,14 @@ You can now, start the pipeline and select the proper parameters and fill in the
 Once the execution is completed, you will see the pipeline run output and logs and you can then access the deployed application:
 
 With successful execution:
-<img width="1478" alt="Screen Shot 2021-11-11 at 12 08 37" src="https://user-images.githubusercontent.com/18471537/141286196-b1e6ab47-8111-46b3-b5f8-8ca704ccf257.png">
+<img width="1475" alt="Screen Shot 2021-11-11 at 15 50 10" src="https://user-images.githubusercontent.com/18471537/141309327-610550bc-ca25-40ae-b1c5-23b8366aab8b.png">
 
 With failed execution:
-<img width="1483" alt="Screen Shot 2021-11-11 at 12 08 22" src="https://user-images.githubusercontent.com/18471537/141286713-2d4bb879-827a-498b-84f7-f719377cfca8.png">
+<img width="1475" alt="Screen Shot 2021-11-11 at 15 50 58" src="https://user-images.githubusercontent.com/18471537/141309438-592785f6-30a7-4411-a692-16ab34b6bad9.png">
 
-You will get slack notifications accordingly with the pipeline execution results, if you don't want to use it, you can just set the slack notification parameter in the pipeline as false. 
+You will get slack notifications accordingly when the pipeline start the execution and at the end with the pipeline execution results, if you don't want to use it, you can just set the slack notification parameter in the pipeline as false. 
 
-<img width="674" alt="Screen Shot 2021-11-11 at 12 53 26" src="https://user-images.githubusercontent.com/18471537/141286000-c5886779-59bb-445f-866c-c2e3c943171b.png">
+<img width="665" alt="Screen Shot 2021-11-11 at 15 51 29" src="https://user-images.githubusercontent.com/18471537/141309521-d85d47ec-f2c4-4d2a-b88c-822355e1eec1.png">
 
 Note: We have used source2image task to deploy the application, but we could just use Openshift binary build (oc) for the generated .dll files similar to what we did in Jenkins or Azure DevOps pipeline, but we used s2i task here for more demonstration of the available options.
 
