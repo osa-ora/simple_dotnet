@@ -2,7 +2,6 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: my-dotnet-app-pipeline
-  namespace: cicd
 spec:
   finally:
     - name: slack-notification
