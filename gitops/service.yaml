@@ -1,0 +1,17 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: dotnet-app
+  labels:
+    app: dotnet-app
+    app.kubernetes.io/component: dotnet-app
+    app.kubernetes.io/instance: dotnet-app
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    deployment: dotnet-app
+  sessionAffinity: None
