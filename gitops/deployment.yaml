@@ -45,7 +45,7 @@ spec:
           imagePullPolicy: IfNotPresent
           terminationMessagePolicy: File
           image: >-
-            image-registry.openshift-image-registry.svc:5000/dev/dotnet-app:1.1
+            image-registry.openshift-image-registry.svc:5000/dev/dotnet-app:1.0
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
   strategy:
