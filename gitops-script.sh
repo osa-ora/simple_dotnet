@@ -43,6 +43,6 @@ echo "Make sure tkn command line tool is available in your command prompt"
 echo "Press [Enter] key to resume..."
 read
 echo "Running Tekton GitOps pipeline for dotnet core app …"
-tkn pipeline start dotnet-gitops-pipeline --param slack_enabled=true --param first-run=true --param project-name=dev --workspace name=dotnet-workspace,volumeClaimTemplateFile=https://raw.githubusercontent.com/openshift/pipelines-tutorial/pipelines-1.5/01_pipeline/03_persistent_volume_claim.yaml -n cicd
+tkn pipeline start dotnet-gitops-pipeline --param slack_enabled=true --param project-name=dev --workspace name=dotnet-workspace,volumeClaimTemplateFile=https://raw.githubusercontent.com/openshift/pipelines-tutorial/pipelines-1.5/01_pipeline/03_persistent_volume_claim.yaml -n cicd
 
 echo "Done!!"
