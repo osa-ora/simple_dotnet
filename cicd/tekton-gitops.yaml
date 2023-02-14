@@ -1,0 +1,244 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: dotnet-gitops-pipeline
+  namespace: cicd
+spec:
+  finally:
+    - name: final-slack-notification
+      params:
+        - name: webhook-secret
+          value: webhook-secret
+        - name: message
+          value: >-
+            Pipeline execution results $(tasks.status) for $(params.git_url) -
+            $(params.git_branch)
+        - name: bot-name
+          value: Tekton Bot
+        - name: icon-emoji
+          value: ':robot_face:'
+      taskRef:
+        kind: Task
+        name: send-to-webhook-slack
+      when:
+        - input: $(params.slack_enabled)
+          operator: in
+          values:
+            - 'true'
+  params:
+    - default: 'https://github.com/osa-ora/simple_dotnet'
+      description: Git Repository
+      name: git_url
+      type: string
+    - default: main
+      description: Git Branch
+      name: git_branch
+      type: string
+    - default: 6d3cd9d574d946ab8f9ff5505ac75345cf347436
+      description: SonarQube Token
+      name: sonarqube_token
+      type: string
+    - default: 'http://sonarqube-cicd.apps.cluster-344b.344b.sandbox1597.opentlc.com'
+      description: SonarQube URL
+      name: sonarqube_url
+      type: string
+    - default: dotnet
+      description: SonarQube Project
+      name: sonarqube_proj
+      type: string
+    - default: 'false'
+      description: Run SonarQube?
+      name: run-sonarqube
+      type: string
+    - default: '1.0'
+      description: Image Tag Name
+      name: image-tag
+      type: string
+    - default: dotnet-app
+      description: Application Name?
+      name: app-name
+      type: string
+    - default: dev
+      description: Project Name?
+      name: project-name
+      type: string
+    - default: 'true'
+      description: Send Slack Notification
+      name: slack_enabled
+      type: string
+  tasks:
+    - name: git-clone
+      params:
+        - name: url
+          value: $(params.git_url)
+        - name: revision
+          value: $(params.git_branch)
+        - name: submodules
+          value: 'true'
+        - name: depth
+          value: '1'
+        - name: sslVerify
+          value: 'true'
+        - name: deleteExisting
+          value: 'true'
+        - name: verbose
+          value: 'true'
+        - name: gitInitImage
+          value: >-
+            registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:da1aedf0b17f2b9dd2a46edc93ff1c0582989414b902a28cd79bad8a035c9ea4
+        - name: userHome
+          value: /tekton/home
+      runAfter:
+        - send-to-webhook-slack
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: dotnet-workspace
+    - name: tag-image
+      params:
+        - name: SCRIPT
+          value: '$(params.project-name)/$(params.app-name):$(params.image-tag)'
+        - name: VERSION
+          value: latest
+      runAfter:
+        - s2i-dotnet
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: wait
+      params:
+        - name: SCRIPT
+          value: sleep 25
+        - name: VERSION
+          value: latest
+      runAfter:
+        - gitops-deploy-app
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: smoke-test
+      params:
+        - name: SCRIPT
+          value: >-
+            curl $(oc get route $(params.app-name) -n=$(params.project-name) -o
+            jsonpath='{.spec.host}') | grep 'Web apps'
+        - name: VERSION
+          value: latest
+      runAfter:
+        - wait
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: gitops-deploy-app
+      params:
+        - name: SCRIPT
+          value: >-
+            oc apply -f
+            https://raw.githubusercontent.com/osa-ora/simple_dotnet/main/cicd/dotnet-app-gitops.yaml
+            -n openshift-gitops
+        - name: VERSION
+          value: latest
+      runAfter:
+        - tag-image
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dotnet-workspace
+        - name: kubeconfig-dir
+          workspace: dotnet-workspace
+    - name: dotnet-sonarqube-scanner
+      params:
+        - name: SONAR_HOST_URL
+          value: $(params.sonarqube_url)
+        - name: SONAR_PROJECT_KEY
+          value: $(params.sonarqube_proj)
+        - name: SONAR_LOGIN
+          value: $(params.sonarqube_token)
+      runAfter:
+        - dotnet-test
+      taskRef:
+        kind: Task
+        name: dotnet-sonarqube-scanner
+      when:
+        - input: $(params.run-sonarqube)
+          operator: in
+          values:
+            - 'true'
+      workspaces:
+        - name: source-dir
+          workspace: dotnet-workspace
+    - name: s2i-dotnet
+      params:
+        - name: BUILDER_IMAGE
+          value: >-
+            registry.redhat.io/rhel8/buildah@sha256:99cae35f40c7ec050fed3765b2b27e0b8bbea2aa2da7c16408e2ca13c60ff8ee
+        - name: VERSION
+          value: 3.1-ubi8
+        - name: PATH_CONTEXT
+          value: .
+        - name: TLSVERIFY
+          value: 'false'
+        - name: IMAGE
+          value: >-
+            image-registry.openshift-image-registry.svc:5000/$(params.project-name)/$(params.app-name)
+      runAfter:
+        - dotnet-sonarqube-scanner
+      taskRef:
+        kind: ClusterTask
+        name: s2i-dotnet
+      workspaces:
+        - name: source
+          workspace: dotnet-workspace
+    - name: dotnet-test
+      params:
+        - name: TEST_OPTIONS
+          value: '--collect:"XPlat Code Coverage" --logger trx'
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: dotnet-test
+      workspaces:
+        - name: source-dir
+          workspace: dotnet-workspace
+    - name: send-to-webhook-slack
+      params:
+        - name: webhook-secret
+          value: webhook-secret
+        - name: message
+          value: >-
+            Pipeline execution started for $(params.git_url) -
+            $(params.git_branch)
+        - name: bot-name
+          value: Tekton Bot
+        - name: icon-emoji
+          value: ':robot_face:'
+      taskRef:
+        kind: Task
+        name: send-to-webhook-slack
+      when:
+        - input: $(params.slack_enabled)
+          operator: in
+          values:
+            - 'true'
+  workspaces:
+    - name: dotnet-workspace
