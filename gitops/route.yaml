@@ -1,0 +1,16 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: dotnet-app
+  labels:
+    app: dotnet-app
+    app.kubernetes.io/component: dotnet-app
+    app.kubernetes.io/instance: dotnet-app
+spec:
+  to:
+    kind: Service
+    name: dotnet-app
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+  wildcardPolicy: None
